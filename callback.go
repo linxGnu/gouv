@@ -15,6 +15,7 @@ extern void __uv_timer_cb(uv_timer_t* timer, int status);
 extern void __uv_idle_cb(uv_idle_t* handle, int status);
 extern void __uv_close_cb(uv_handle_t* handle);
 extern void __uv_prepare_cb(uv_prepare_t* handle);
+extern void __uv_async_cb(uv_prepare_t* handle);
 extern void __uv_check_cb(uv_prepare_t* handle);
 extern void __uv_shutdown_cb(uv_shutdown_t* req, int status);
 extern void __uv_exit_cb(uv_process_t* process, int exit_status, int term_signal);
@@ -68,6 +69,10 @@ static int _uv_prepare_start(uv_prepare_t* handle) {
 	return uv_prepare_start(handle, __uv_prepare_cb);
 }
 
+static int _uv_async_init(uv_loop_t* loop, uv_async_t* handle) {
+	return uv_async_init(loop, handle, __uv_async_cb);
+}
+
 static int _uv_check_start(uv_check_t* handle) {
 	return uv_check_start(handle, __uv_check_cb);
 }
@@ -114,6 +119,7 @@ type callback_info struct {
 	timer_cb      func(*Handle, int)
 	idle_cb       func(*Handle, int)
 	exit_cb       func(*Handle, int, int)
+	async_cb      func(*Handle)
 	data          interface{}
 }
 
@@ -262,6 +268,10 @@ func uv_idle_start(idle *C.uv_idle_t) C.int {
 	return C._uv_idle_start(idle)
 }
 
+func uv_async_init(loop *C.uv_loop_t, async *C.uv_async_t) C.int {
+	return C._uv_async_init(loop, async)
+}
+
 // func uv_spawn(loop *C.uv_loop_t, process *C.uv_process_t, options C.uv_process_options_t) int {
 // 	return int(C._uv_spawn(loop, process, options))
 // }
@@ -329,6 +339,13 @@ func __uv_prepare_cb(h *C.uv_prepare_t) {
 func __uv_check_cb(h *C.uv_prepare_t) {
 	if cbi := (*callback_info)(h.data); cbi.check_cb != nil {
 		cbi.check_cb(&Handle{(*C.uv_handle_t)(unsafe.Pointer(h)), cbi.data})
+	}
+}
+
+//export __uv_async_cb
+func __uv_async_cb(h *C.uv_prepare_t) {
+	if cbi := (*callback_info)(h.data); cbi.async_cb != nil {
+		cbi.async_cb(&Handle{(*C.uv_handle_t)(unsafe.Pointer(h)), cbi.data})
 	}
 }
 

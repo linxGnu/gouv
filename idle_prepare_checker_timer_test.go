@@ -36,15 +36,36 @@ func TestIdlePrepareCheckerTimer(t *testing.T) {
 	}
 
 	prepare.Start(func(h *Handle) {
-		log.Println(h.Data)
+		if h.Data != nil {
+			x := h.Data.(map[int]string)
+			if st, ok := x[3]; ok && st == "p" {
+				return
+			}
+		}
+
+		t.Fatalf("Failed on prepare")
 	})
 
 	checker.Start(func(h *Handle) {
-		log.Println(h.Data)
+		if h.Data != nil {
+			x := h.Data.(map[int]string)
+			if st, ok := x[4]; ok && st == "c" {
+				return
+			}
+		}
+
+		t.Fatalf("Failed on checker")
 	})
 
 	idle.Start(func(h *Handle, status int) {
-		log.Println(status, h.Data)
+		if h.Data != nil {
+			x := h.Data.(map[int]string)
+			if st, ok := x[5]; ok && st == "i" {
+				return
+			}
+		}
+
+		t.Fatalf("Failed on idle")
 	})
 
 	timer1.Start(func(h *Handle, status int) {
@@ -58,10 +79,10 @@ func TestIdlePrepareCheckerTimer(t *testing.T) {
 	go func() {
 		time.Sleep(2 * time.Second)
 		timer1.Again()
-		timer1.SetRepeat(200)
+		timer1.SetRepeat(1600)
 
 		timer2.Again()
-		timer2.SetRepeat(100)
+		timer2.SetRepeat(2700)
 	}()
 
 	go func() {
@@ -87,6 +108,13 @@ func TestIdlePrepareCheckerTimer(t *testing.T) {
 
 		timer1.Freemem()
 
+		// now stop idle
+		if err := idle.Stop(); err != nil {
+			panic(err)
+		}
+
+		idle.Freemem()
+
 		// now stop prepare
 		if err := prepare.Stop(); err != nil {
 			panic(err)
@@ -100,14 +128,11 @@ func TestIdlePrepareCheckerTimer(t *testing.T) {
 		}
 
 		checker.Freemem()
-
-		// now stop idle
-		if err := idle.Stop(); err != nil {
-			panic(err)
-		}
-
-		idle.Freemem()
 	}()
 
-	dfLoop.Run(UVRUNDEFAULT)
+	go dfLoop.Run(UVRUNDEFAULT)
+
+	time.Sleep(10 * time.Second)
+	dfLoop.Close()
+	t.SkipNow()
 }

@@ -31,12 +31,11 @@ func TestNewUvLoop(t *testing.T) {
 		t.Fatalf("Loop not stop well")
 	}
 
-	// Try to rerun
-	if err := loop.Run(UVRUNONCE); err != nil {
+	if err := loop.Run(UVRUNNOWAIT); err != nil {
 		t.Fatal(err)
 	}
 
-	if err := loop.Run(UVRUNNOWAIT); err != nil {
+	if err := loop.Run(UVRUNONCE); err != nil {
 		t.Fatal(err)
 	}
 
@@ -52,6 +51,9 @@ func TestNewUvLoop(t *testing.T) {
 
 	// try to print backend fd and timeout
 	fmt.Println(loop.BackendFD(), loop.BackendTimeout())
+
+	loop.Stop()
+	time.Sleep(2 * time.Second)
 
 	if err := loop.Close(); err != nil {
 		t.Fatal(err)
