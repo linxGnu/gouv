@@ -19,7 +19,7 @@ type UvTimer struct {
 }
 
 // TimerInit initialize the timer handle
-func TimerInit(loop *UvLoop, data interface{}) (timer *UvTimer, err error) {
+func TimerInit(loop *UvLoop, data interface{}) (*UvTimer, error) {
 	t := C.mallocTimeT()
 
 	if loop == nil {

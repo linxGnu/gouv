@@ -19,7 +19,7 @@ type UvPrepare struct {
 }
 
 // UvPrepareInit initialize the prepare handle
-func UvPrepareInit(loop *UvLoop, data interface{}) (timer *UvPrepare, err error) {
+func UvPrepareInit(loop *UvLoop, data interface{}) (*UvPrepare, error) {
 	t := C.mallocPrepareT()
 
 	if loop == nil {

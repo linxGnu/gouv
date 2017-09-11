@@ -19,7 +19,7 @@ type UvIdle struct {
 }
 
 // UvIdleInit initialize the prepare handle
-func UvIdleInit(loop *UvLoop, data interface{}) (timer *UvIdle, err error) {
+func UvIdleInit(loop *UvLoop, data interface{}) (*UvIdle, error) {
 	t := C.mallocIdleT()
 
 	if loop == nil {

@@ -131,8 +131,6 @@ func TestIdlePrepareCheckerTimer(t *testing.T) {
 	}()
 
 	go dfLoop.Run(UVRUNDEFAULT)
-
 	time.Sleep(10 * time.Second)
-	dfLoop.Close()
-	t.SkipNow()
+	go dfLoop.Close()
 }

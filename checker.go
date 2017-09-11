@@ -19,7 +19,7 @@ type UvCheck struct {
 }
 
 // UvCheckInit initialize the prepare handle
-func UvCheckInit(loop *UvLoop, data interface{}) (timer *UvCheck, err error) {
+func UvCheckInit(loop *UvLoop, data interface{}) (*UvCheck, error) {
 	t := C.mallocCheckT()
 
 	if loop == nil {

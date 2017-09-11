@@ -12,6 +12,8 @@ extern void __uv_read_cb(uv_stream_t* stream, ssize_t nread, uv_buf_t buf);
 extern void __uv_udp_recv_cb(uv_udp_t* handle, ssize_t nread, uv_buf_t* buf, struct sockaddr* addr, unsigned flags);
 extern void __uv_udp_send_cb(uv_udp_send_t* req, int status);
 extern void __uv_timer_cb(uv_timer_t* timer, int status);
+extern void __uv_poll_cb(uv_poll_t* p, int status, int events);
+extern void __uv_signal_cb(uv_signal_t* s, int signum);
 extern void __uv_idle_cb(uv_idle_t* handle, int status);
 extern void __uv_close_cb(uv_handle_t* handle);
 extern void __uv_prepare_cb(uv_prepare_t* handle);
@@ -65,6 +67,18 @@ static int _uv_timer_start(uv_timer_t* timer, uint64_t timeout, uint64_t repeat)
 	return uv_timer_start(timer, __uv_timer_cb, timeout, repeat);
 }
 
+static int _uv_poll_start(uv_poll_t* p, int events) {
+	return uv_poll_start(p, events, __uv_poll_cb);
+}
+
+static int _uv_signal_start(uv_signal_t* s, int sigNum) {
+	return uv_signal_start(s, __uv_signal_cb, sigNum);
+}
+
+static int _uv_signal_start_oneshot(uv_signal_t* s, int sigNum) {
+	return uv_signal_start_oneshot(s, __uv_signal_cb, sigNum);
+}
+
 static int _uv_prepare_start(uv_prepare_t* handle) {
 	return uv_prepare_start(handle, __uv_prepare_cb);
 }
@@ -114,9 +128,11 @@ type callback_info struct {
 	udp_send_cb   func(*Request, int)
 	close_cb      func(*Handle)
 	prepare_cb    func(*Handle)
+	poll_cb       func(*Handle, int, int)
 	check_cb      func(*Handle)
 	shutdown_cb   func(*Request, int)
 	timer_cb      func(*Handle, int)
+	signal_cb     func(*Handle, C.int)
 	idle_cb       func(*Handle, int)
 	exit_cb       func(*Handle, int, int)
 	async_cb      func(*Handle)
@@ -256,6 +272,18 @@ func uv_timer_start(timer *C.uv_timer_t, timeout uint64, repeat uint64) C.int {
 	return C._uv_timer_start(timer, C.uint64_t(timeout), C.uint64_t(repeat))
 }
 
+func uv_poll_start(p *C.uv_poll_t, event int) C.int {
+	return C._uv_poll_start(p, C.int(event))
+}
+
+func uv_signal_start(p *C.uv_signal_t, sigNum int) C.int {
+	return C._uv_signal_start(p, C.int(sigNum))
+}
+
+func uv_signal_start_oneshot(p *C.uv_signal_t, sigNum int) C.int {
+	return C._uv_signal_start_oneshot(p, C.int(sigNum))
+}
+
 func uv_prepare_start(p *C.uv_prepare_t) C.int {
 	return C._uv_prepare_start(p)
 }
@@ -376,22 +404,32 @@ func __uv_udp_recv_cb(u *C.uv_udp_t, nread C.ssize_t, buf *C.uv_buf_t, sa *C.str
 
 //export __uv_udp_send_cb
 func __uv_udp_send_cb(us *C.uv_udp_send_t, status C.int) {
-	cbi := (*callback_info)(us.handle.data)
-	if cbi.udp_send_cb != nil {
+	if cbi := (*callback_info)(us.handle.data); cbi.udp_send_cb != nil {
 		cbi.udp_send_cb(&Request{
 			(*C.uv_req_t)(unsafe.Pointer(us)),
-			&Handle{
-				(*C.uv_handle_t)(unsafe.Pointer(us.handle)),
-				cbi.data}}, int(status))
+			&Handle{(*C.uv_handle_t)(unsafe.Pointer(us.handle)), cbi.data}},
+			int(status))
 	}
 }
 
 //export __uv_timer_cb
 func __uv_timer_cb(t *C.uv_timer_t, status C.int) {
-	cbi := (*callback_info)(t.data)
-	if cbi.timer_cb != nil {
-		cbi.timer_cb(&Handle{
-			(*C.uv_handle_t)(unsafe.Pointer(t)), cbi.data}, int(status))
+	if cbi := (*callback_info)(t.data); cbi.timer_cb != nil {
+		cbi.timer_cb(&Handle{(*C.uv_handle_t)(unsafe.Pointer(t)), cbi.data}, int(status))
+	}
+}
+
+//export __uv_poll_cb
+func __uv_poll_cb(p *C.uv_poll_t, status, events C.int) {
+	if cbi := (*callback_info)(p.data); cbi.timer_cb != nil {
+		cbi.poll_cb(&Handle{(*C.uv_handle_t)(unsafe.Pointer(p)), cbi.data}, int(status), int(events))
+	}
+}
+
+//export __uv_signal_cb
+func __uv_signal_cb(s *C.uv_signal_t, sigNum C.int) {
+	if cbi := (*callback_info)(s.data); cbi.signal_cb != nil {
+		cbi.signal_cb(&Handle{(*C.uv_handle_t)(unsafe.Pointer(s)), cbi.data}, sigNum)
 	}
 }
 

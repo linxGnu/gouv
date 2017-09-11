@@ -30,8 +30,6 @@ func TestAsync(t *testing.T) {
 	}()
 
 	go dfLoop.Run(UVRUNDEFAULT)
-
 	time.Sleep(2 * time.Second)
-	dfLoop.Close()
-	t.SkipNow()
+	go dfLoop.Close()
 }

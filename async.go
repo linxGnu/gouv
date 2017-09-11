@@ -19,7 +19,7 @@ type UvAsync struct {
 }
 
 // UvAsyncInit initialize the prepare handle
-func UvAsyncInit(loop *UvLoop, data interface{}, cb func(*Handle)) (timer *UvAsync, err error) {
+func UvAsyncInit(loop *UvLoop, data interface{}, cb func(*Handle)) (*UvAsync, error) {
 	t := C.mallocAsyncT()
 	t.data = unsafe.Pointer(&callback_info{data: data, async_cb: cb})
 
