@@ -95,10 +95,10 @@ static int _uv_idle_start(uv_idle_t* idle) {
 	return uv_idle_start(idle, __uv_idle_cb);
 }
 
-// static int _uv_spawn(uv_loop_t* loop, uv_process_t* process, uv_process_options_t options) {
-// 	options.exit_cb = __uv_exit_cb;
-// 	return uv_spawn(loop, process, options);
-// }
+static int _uv_spawn(uv_loop_t* loop, uv_process_t* process, uv_process_options_t* options) {
+	options->exit_cb = __uv_exit_cb;
+	return uv_spawn(loop, process, options);
+}
 
 #define UV_SIZEOF_SOCKADDR_IN ((int)sizeof(struct sockaddr_in))
 
@@ -300,9 +300,9 @@ func uv_async_init(loop *C.uv_loop_t, async *C.uv_async_t) C.int {
 	return C._uv_async_init(loop, async)
 }
 
-// func uv_spawn(loop *C.uv_loop_t, process *C.uv_process_t, options C.uv_process_options_t) int {
-// 	return int(C._uv_spawn(loop, process, options))
-// }
+func uv_spawn(loop *C.uv_loop_t, process *C.uv_process_t, options *C.uv_process_options_t) C.int {
+	return C._uv_spawn(loop, process, options)
+}
 
 //export __uv_connect_cb
 func __uv_connect_cb(c *C.uv_connect_t, status C.int) {

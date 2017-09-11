@@ -25,11 +25,21 @@ func ParseUvErr(r C.int) error {
 
 // UvErrName returns the error name for the given error code. Leaks a few bytes of memory when you call it with an unknown error code.
 func UvErrName(r C.int) string {
-  return C.GoString(C.uv_err_name(r))
+	return C.GoString(C.uv_err_name(r))
 }
 
 // TranslateSysError (uv_translate_sys_error) Returns the libuv error code equivalent to the given platform dependent error code: POSIX error codes on Unix (the ones stored in errno), and Win32 error codes on Windows (those returned by GetLastError() or WSAGetLastError()).
 // If sys_errno is already a libuv error, it is simply returned.
 func TranslateSysError(r C.int) C.int {
-  return C.uv_translate_sys_error(r)
+	return C.uv_translate_sys_error(r)
+}
+
+// GetFreeMemory get free memory
+func GetFreeMemory() uint64 {
+	return uint64(C.uv_get_free_memory())
+}
+
+// GetTotalMemory get total memory
+func GetTotalMemory() uint64 {
+	return uint64(C.uv_get_total_memory())
 }
