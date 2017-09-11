@@ -1,4 +1,4 @@
-package binduv
+package gouv
 
 // #cgo pkg-config: libuv
 /*
@@ -258,8 +258,8 @@ func uv_check_start(p *C.uv_check_t) C.int {
 	return C._uv_check_start(p)
 }
 
-func uv_idle_start(idle *C.uv_idle_t) int {
-	return int(C._uv_idle_start(idle))
+func uv_idle_start(idle *C.uv_idle_t) C.int {
+	return C._uv_idle_start(idle)
 }
 
 // func uv_spawn(loop *C.uv_loop_t, process *C.uv_process_t, options C.uv_process_options_t) int {

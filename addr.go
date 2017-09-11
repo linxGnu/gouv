@@ -1,4 +1,4 @@
-package binduv
+package gouv
 
 // #cgo pkg-config: libuv
 /*

@@ -1,4 +1,4 @@
-package binduv
+package gouv
 
 import (
 	"fmt"
@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func TestPrepareAndTimer(t *testing.T) {
+func TestIdlePrepareCheckerTimer(t *testing.T) {
 	dfLoop := UvLoopDefault()
 
 	timer1, err := TimerInit(dfLoop, map[int]string{1: "t1"})
@@ -30,12 +30,21 @@ func TestPrepareAndTimer(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	idle, err := UvIdleInit(dfLoop, map[int]string{5: "i"})
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	prepare.Start(func(h *Handle) {
 		log.Println(h.Data)
 	})
 
 	checker.Start(func(h *Handle) {
 		log.Println(h.Data)
+	})
+
+	idle.Start(func(h *Handle, status int) {
+		log.Println(status, h.Data)
 	})
 
 	timer1.Start(func(h *Handle, status int) {
@@ -91,6 +100,13 @@ func TestPrepareAndTimer(t *testing.T) {
 		}
 
 		checker.Freemem()
+
+		// now stop idle
+		if err := idle.Stop(); err != nil {
+			panic(err)
+		}
+
+		idle.Freemem()
 	}()
 
 	dfLoop.Run(UVRUNDEFAULT)
