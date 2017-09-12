@@ -43,3 +43,18 @@ func GetFreeMemory() uint64 {
 func GetTotalMemory() uint64 {
 	return uint64(C.uv_get_total_memory())
 }
+
+// UvRef (uv_ref) reference the given handle. References are idempotent, that is, if a handle is already referenced calling this function again will have no effect.
+func UvRef(h *C.uv_handle_t) {
+	C.uv_ref(h)
+}
+
+// UvUnRef (uv_unref) unreference the given handle. References are idempotent, that is, if a handle is not referenced calling this function again will have no effect.
+func UvUnRef(h *C.uv_handle_t) {
+	C.uv_unref(h)
+}
+
+// UvHasRef (uv_has_ref) returns non-zero if the handle referenced, zero otherwise.
+func UvHasRef(h *C.uv_handle_t) int {
+	return int(C.uv_has_ref(h))
+}

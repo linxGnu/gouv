@@ -20,7 +20,7 @@ func TestNewUvLoop(t *testing.T) {
 		t.Fatalf("NewUvLoopDefault failed")
 	}
 
-	if err := loop.Run(UVRUNDEFAULT); err != nil {
+	if err := loop.Run(UV_RUN_DEFAULT); err != nil {
 		t.Fatal(err)
 	}
 
@@ -31,11 +31,11 @@ func TestNewUvLoop(t *testing.T) {
 		t.Fatalf("Loop not stop well")
 	}
 
-	if err := loop.Run(UVRUNNOWAIT); err != nil {
+	if err := loop.Run(UV_RUN_NOWAIT); err != nil {
 		t.Fatal(err)
 	}
 
-	if err := loop.Run(UVRUNONCE); err != nil {
+	if err := loop.Run(UV_RUN_ONCE); err != nil {
 		t.Fatal(err)
 	}
 

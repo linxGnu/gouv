@@ -12,14 +12,14 @@ import "fmt"
 type UvRunMode int
 
 const (
-	// UVRUNDEFAULT runs the event loop until there are no more active and referenced handles or requests. Returns non-zero if uv_stop() was called and there are still active handles or requests. Returns zero in all other cases.
-	UVRUNDEFAULT UvRunMode = 1
+	// UV_RUN_DEFAULT runs the event loop until there are no more active and referenced handles or requests. Returns non-zero if uv_stop() was called and there are still active handles or requests. Returns zero in all other cases.
+	UV_RUN_DEFAULT UvRunMode = 1
 
-	// UVRUNONCE poll for i/o once. Note that this function blocks if there are no pending callbacks. Returns zero when done (no active handles or requests left), or non-zero if more callbacks are expected (meaning you should run the event loop again sometime in the future).
-	UVRUNONCE UvRunMode = 2
+	// UV_RUN_ONCE poll for i/o once. Note that this function blocks if there are no pending callbacks. Returns zero when done (no active handles or requests left), or non-zero if more callbacks are expected (meaning you should run the event loop again sometime in the future).
+	UV_RUN_ONCE UvRunMode = 2
 
-	// UVRUNNOWAIT poll for i/o once but don’t block if there are no pending callbacks. Returns zero if done (no active handles or requests left), or non-zero if more callbacks are expected (meaning you should run the event loop again sometime in the future).
-	UVRUNNOWAIT UvRunMode = 3
+	// UV_RUN_NOWAIT poll for i/o once but don’t block if there are no pending callbacks. Returns zero if done (no active handles or requests left), or non-zero if more callbacks are expected (meaning you should run the event loop again sometime in the future).
+	UV_RUN_NOWAIT UvRunMode = 3
 )
 
 // UvLoop wrapper of C.uv_loop_t
@@ -74,17 +74,17 @@ func (uvl *UvLoop) Fork() error {
 // Run (uv_run) This function runs the event loop. It will act differently depending on the specified mode.
 func (uvl *UvLoop) Run(mode UvRunMode) error {
 	switch mode {
-	case UVRUNDEFAULT:
+	case UV_RUN_DEFAULT:
 		if r := C.uv_run(uvl.loop, C.UV_RUN_DEFAULT); r != 0 {
 			return ParseUvErr(r)
 		}
 		return nil
-	case UVRUNONCE:
+	case UV_RUN_ONCE:
 		if r := C.uv_run(uvl.loop, C.UV_RUN_ONCE); r != 0 {
 			return ParseUvErr(r)
 		}
 		return nil
-	case UVRUNNOWAIT:
+	case UV_RUN_NOWAIT:
 		if r := C.uv_run(uvl.loop, C.UV_RUN_NOWAIT); r != 0 {
 			return ParseUvErr(r)
 		}

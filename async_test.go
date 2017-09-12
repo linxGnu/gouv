@@ -29,7 +29,7 @@ func TestAsync(t *testing.T) {
 		}
 	}()
 
-	go dfLoop.Run(UVRUNDEFAULT)
+	go dfLoop.Run(UV_RUN_DEFAULT)
 	time.Sleep(2 * time.Second)
 	go dfLoop.Close()
 }

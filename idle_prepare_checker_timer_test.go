@@ -130,7 +130,7 @@ func TestIdlePrepareCheckerTimer(t *testing.T) {
 		checker.Freemem()
 	}()
 
-	go dfLoop.Run(UVRUNDEFAULT)
+	go dfLoop.Run(UV_RUN_DEFAULT)
 	time.Sleep(10 * time.Second)
 	go dfLoop.Close()
 }

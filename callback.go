@@ -107,7 +107,9 @@ static int _uv_spawn(uv_loop_t* loop, uv_process_t* process, uv_process_options_
 #cgo windows LDFLAGS: -luv.dll -lws2_32 -lws2_32 -lpsapi -liphlpapi
 */
 import "C"
-import "unsafe"
+import (
+	"unsafe"
+)
 
 type Request struct {
 	r      *C.uv_req_t
@@ -444,9 +446,7 @@ func __uv_idle_cb(i *C.uv_idle_t, status C.int) {
 
 //export __uv_exit_cb
 func __uv_exit_cb(pc *C.uv_process_t, exit_status C.int, term_signal C.int) {
-	cbi := (*callback_info)(pc.data)
-	if cbi.exit_cb != nil {
-		cbi.exit_cb(&Handle{
-			(*C.uv_handle_t)(unsafe.Pointer(pc)), cbi.data}, int(exit_status), int(term_signal))
+	if cbi := (*callback_info)(pc.data); cbi.exit_cb != nil {
+		cbi.exit_cb(&Handle{(*C.uv_handle_t)(unsafe.Pointer(pc)), cbi.data}, int(exit_status), int(term_signal))
 	}
 }
