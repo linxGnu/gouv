@@ -25,7 +25,6 @@ char* testWriteTCP(uv_stream_t *client, ssize_t nread, uv_buf_t* buf) {
 */
 import "C"
 import (
-	"fmt"
 	"unsafe"
 )
 
@@ -145,8 +144,7 @@ func (t *UvTCP) Connect(req *C.uv_connect_t, sockAddr SockaddrIn, cb func(*Reque
 }
 
 func sampleTCPReadHandling(h *Handle, buf *C.uv_buf_t, nRead C.ssize_t) {
-	tmp := C.GoString(C.testWriteTCP(h.ptr.(*UvTCP).s, nRead, buf))
-	fmt.Println(tmp, len(tmp))
+	C.GoString(C.testWriteTCP(h.ptr.(*UvTCP).s, nRead, buf))
 }
 
 // TODO: uv_tcp_getsockname
