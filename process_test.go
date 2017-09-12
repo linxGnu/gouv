@@ -9,6 +9,9 @@ import (
 )
 
 func TestSpawnChildProcess(t *testing.T) {
+
+	UvDisableStdioInheritance()
+
 	dfLoop := UvLoopDefault()
 
 	// spawn new process
@@ -18,6 +21,10 @@ func TestSpawnChildProcess(t *testing.T) {
 		Flags: UV_PROCESS_DETACHED,
 		File:  "ls",
 		ExitCb: func(h *Handle, status, sigNum int) {
+			if status != 0 {
+				t.Fatalf("Failed spawn child process")
+			}
+
 			fmt.Printf("Process exited with status %d and signal %d\n", status, sigNum)
 		},
 	}, nil)
@@ -104,7 +111,7 @@ while True:
 	}
 
 	go dfLoop.Run(UV_RUN_DEFAULT)
-	time.Sleep(3 * time.Second)
+	time.Sleep(1 * time.Second)
 
 	// Unref this process
 	process.Unref()
@@ -112,7 +119,7 @@ while True:
 	// Try to kill this proces
 	process.Kill(9)
 
-	time.Sleep(2 * time.Second)
+	time.Sleep(1 * time.Second)
 
 	go dfLoop.Close()
 }

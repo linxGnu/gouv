@@ -38,57 +38,6 @@ import (
 	"unsafe"
 )
 
-// UvStdioFlags flags specifying how a stdio should be transmitted to the child process.
-type UvStdioFlags int
-
-const (
-	UV_IGNORE         UvStdioFlags = 0x00
-	UV_CREATE_PIPE    UvStdioFlags = 0x01
-	UV_INHERIT_FD     UvStdioFlags = 0x02
-	UV_INHERIT_STREAM UvStdioFlags = 0x04
-	/*
-	 * When UV_CREATE_PIPE is specified, UV_READABLE_PIPE and UV_WRITABLE_PIPE
-	 * determine the direction of flow, from the child process' perspective. Both
-	 * flags may be specified to create a duplex data stream.
-	 */
-	UV_READABLE_PIPE UvStdioFlags = 0x10
-	UV_WRITABLE_PIPE UvStdioFlags = 0x20
-)
-
-// UvProcessFlags flags to be set on the flags field of uv_process_options_t.
-type UvProcessFlags uint
-
-const (
-	/*
-	 * Set the child process' user id.
-	 */
-	UV_PROCESS_SETUID UvProcessFlags = (1 << 0)
-	/*
-	 * Set the child process' group id.
-	 */
-	UV_PROCESS_SETGID UvProcessFlags = (1 << 1)
-	/*
-	 * Do not wrap any arguments in quotes, or perform any other escaping, when
-	 * converting the argument list into a command line string. This option is
-	 * only meaningful on Windows systems. On Unix it is silently ignored.
-	 */
-	UV_PROCESS_WINDOWS_VERBATIM_ARGUMENTS UvProcessFlags = (1 << 2)
-	/*
-	 * Spawn the child process in a detached state - this will make it a process
-	 * group leader, and will effectively enable the child to keep running after
-	 * the parent exits. Note that the child process will still keep the
-	 * parent's event loop alive unless the parent process calls uv_unref() on
-	 * the child's process handle.
-	 */
-	UV_PROCESS_DETACHED UvProcessFlags = (1 << 3)
-	/*
-	 * Hide the subprocess console window that would normally be created. This
-	 * option is only meaningful on Windows systems. On Unix it is silently
-	 * ignored.
-	 */
-	UV_PROCESS_WINDOWS_HIDE UvProcessFlags = (1 << 4)
-)
-
 // UvStdioContainerData union of stream and fd
 type UvStdioContainerData struct {
 	Stream *C.uv_stream_t
@@ -131,7 +80,7 @@ type UvProcessOptions struct {
 	Cwd string
 
 	// Flags various flags that control how uv_spawn() behaves. See uv_process_flags.
-	Flags UvProcessFlags
+	Flags UV_PROCESS_FLAGS
 
 	// Stdio the stdio field points to an array of uv_stdio_container_t structs that describe the file descriptors that will be made available to the child process. The convention is that stdio[0] points to stdin, fd 1 is used for stdout, and fd 2 is stderr.
 	Stdio []*UvStdioContainer
@@ -174,11 +123,11 @@ func UvSpawnProcess(loop *UvLoop, options *UvProcessOptions, data interface{}) (
 
 	// malloc in c memory space
 	opt := C.mallocProcessOptsT()
-	// defer C.free(unsafe.Pointer(opt))
+	defer C.free(unsafe.Pointer(opt))
 
 	if len(options.File) > 0 {
 		opt.file = C.CString(options.File)
-		// defer C.free(unsafe.Pointer(opt.file))
+		defer C.free(unsafe.Pointer(opt.file))
 	}
 
 	if len(options.Args) > 0 {
@@ -186,8 +135,9 @@ func UvSpawnProcess(loop *UvLoop, options *UvProcessOptions, data interface{}) (
 		for i := range options.Args {
 			tmp := C.CString(options.Args[i])
 			C.set_process_args(opt.args, C.int(i), tmp)
-			// defer C.free(unsafe.Pointer(tmp))
+			defer C.free(unsafe.Pointer(tmp))
 		}
+		defer C.free(unsafe.Pointer(opt.args))
 	}
 
 	if len(options.Env) > 0 {
@@ -195,13 +145,14 @@ func UvSpawnProcess(loop *UvLoop, options *UvProcessOptions, data interface{}) (
 		for i := range options.Env {
 			tmp := C.CString(options.Env[i])
 			C.set_process_args(opt.env, C.int(i), tmp)
-			// defer C.free(unsafe.Pointer(tmp))
+			defer C.free(unsafe.Pointer(tmp))
 		}
+		defer C.free(unsafe.Pointer(opt.env))
 	}
 
 	if len(options.Cwd) > 0 {
 		opt.cwd = C.CString(options.Cwd)
-		// defer C.free(unsafe.Pointer(opt.cwd))
+		defer C.free(unsafe.Pointer(opt.cwd))
 	}
 
 	opt.flags = C.uint(options.Flags)
@@ -214,14 +165,14 @@ func UvSpawnProcess(loop *UvLoop, options *UvProcessOptions, data interface{}) (
 		for i, v := range options.Stdio {
 			C.set_data_in_StdioContainer(opt.stdio, C.int(i), v.Flags, v.Data.Stream, C.int(v.Data.Fd))
 		}
-		// defer C.free(unsafe.Pointer(opt.stdio))
+		defer C.free(unsafe.Pointer(opt.stdio))
 	}
 
 	opt.uid = C.uv_uid_t(options.UID)
 	opt.gid = C.uv_gid_t(options.GID)
 
 	p := C.mallocProcessT()
-	p.data = unsafe.Pointer(&callback_info{exit_cb: options.ExitCb, data: data})
+	p.data = unsafe.Pointer(&callbackInfo{exit_cb: options.ExitCb, data: data})
 
 	if r := uv_spawn(loop.GetNativeLoop(), p, opt); r != 0 {
 		return nil, ParseUvErr(r)
@@ -231,12 +182,13 @@ func UvSpawnProcess(loop *UvLoop, options *UvProcessOptions, data interface{}) (
 }
 
 // Kill (uv_process_kill) sends the specified signal to the given process handle. Check the documentation on uv_signal_t — Signal handle for signal support, specially on Windows.
-func (p *UvProcess) Kill(sigNum C.int) error {
+func (p *UvProcess) Kill(sigNum C.int) (err error) {
 	if r := C.uv_process_kill(p.p, sigNum); r != 0 {
-		return ParseUvErr(r)
+		err = ParseUvErr(r)
+		return
 	}
 
-	return nil
+	return
 }
 
 // Freemem freemem of process handle
@@ -246,7 +198,7 @@ func (p *UvProcess) Freemem() {
 
 // Unref unrefernce this process
 func (p *UvProcess) Unref() {
-	UvUnRef((*C.uv_handle_t)(unsafe.Pointer(p.p)))
+	uv_unref((*C.uv_handle_t)(unsafe.Pointer(p.p)))
 }
 
 // UvKill (uv_kill) sends the specified signal to the given PID. Check the documentation on uv_signal_t — Signal handle for signal support, specially on Windows.

@@ -30,13 +30,13 @@ func UvSignalInit(loop *UvLoop, data interface{}) (*UvSignal, error) {
 		return nil, ParseUvErr(r)
 	}
 
-	t.data = unsafe.Pointer(&callback_info{data: data})
+	t.data = unsafe.Pointer(&callbackInfo{data: data})
 	return &UvSignal{t, loop.GetNativeLoop(), Handle{(*C.uv_handle_t)(unsafe.Pointer(t)), t.data}}, nil
 }
 
 // Start (uv_signal_start) start the handle with the given callback, watching for the given signal.
 func (s *UvSignal) Start(cb func(*Handle, C.int), sigNum int) (err error) {
-	cbi := (*callback_info)(s.s.data)
+	cbi := (*callbackInfo)(s.s.data)
 	cbi.signal_cb = cb
 
 	if r := uv_signal_start(s.s, sigNum); r != 0 {
@@ -49,7 +49,7 @@ func (s *UvSignal) Start(cb func(*Handle, C.int), sigNum int) (err error) {
 
 // StartOneShot (uv_signal_start_oneshot) same functionality as uv_signal_start() but the signal handler is reset the moment the signal is received.
 func (s *UvSignal) StartOneShot(cb func(*Handle, C.int), sigNum int) (err error) {
-	cbi := (*callback_info)(s.s.data)
+	cbi := (*callbackInfo)(s.s.data)
 	cbi.signal_cb = cb
 
 	if r := uv_signal_start_oneshot(s.s, sigNum); r != 0 {

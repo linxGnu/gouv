@@ -30,13 +30,13 @@ func UvIdleInit(loop *UvLoop, data interface{}) (*UvIdle, error) {
 		return nil, ParseUvErr(r)
 	}
 
-	t.data = unsafe.Pointer(&callback_info{data: data})
+	t.data = unsafe.Pointer(&callbackInfo{data: data})
 	return &UvIdle{t, loop.GetNativeLoop(), Handle{(*C.uv_handle_t)(unsafe.Pointer(t)), t.data}}, nil
 }
 
 // Start (uv_prepare_start) start the timer. timeout and repeat are in milliseconds.
 func (t *UvIdle) Start(cb func(*Handle, int)) (err error) {
-	cbi := (*callback_info)(t.i.data)
+	cbi := (*callbackInfo)(t.i.data)
 	cbi.idle_cb = cb
 
 	if r := uv_idle_start(t.i); r != 0 {
@@ -44,7 +44,7 @@ func (t *UvIdle) Start(cb func(*Handle, int)) (err error) {
 		return
 	}
 
-	return nil
+	return
 }
 
 // Stop (uv_idle_stop) the timer, the callback will not be called anymore.
@@ -54,7 +54,7 @@ func (t *UvIdle) Stop() (err error) {
 		return
 	}
 
-	return nil
+	return
 }
 
 // Freemem freemem of prepare

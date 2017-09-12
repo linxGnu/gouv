@@ -30,13 +30,13 @@ func UvPrepareInit(loop *UvLoop, data interface{}) (*UvPrepare, error) {
 		return nil, ParseUvErr(r)
 	}
 
-	t.data = unsafe.Pointer(&callback_info{data: data})
+	t.data = unsafe.Pointer(&callbackInfo{data: data})
 	return &UvPrepare{t, loop.GetNativeLoop(), Handle{(*C.uv_handle_t)(unsafe.Pointer(t)), t.data}}, nil
 }
 
 // Start (uv_prepare_start) start the timer. timeout and repeat are in milliseconds.
 func (t *UvPrepare) Start(cb func(*Handle)) (err error) {
-	cbi := (*callback_info)(t.p.data)
+	cbi := (*callbackInfo)(t.p.data)
 	cbi.prepare_cb = cb
 
 	if r := uv_prepare_start(t.p); r != 0 {
@@ -44,7 +44,7 @@ func (t *UvPrepare) Start(cb func(*Handle)) (err error) {
 		return
 	}
 
-	return nil
+	return
 }
 
 // Stop (uv_prepare_stop) the timer, the callback will not be called anymore.
@@ -54,7 +54,7 @@ func (t *UvPrepare) Stop() (err error) {
 		return
 	}
 
-	return nil
+	return
 }
 
 // Freemem freemem of prepare

@@ -11,23 +11,6 @@ uv_poll_t* mallocPollT() {
 import "C"
 import "unsafe"
 
-// UvPollEvent poll event types
-type UvPollEvent int
-
-const (
-	// UVREADABLE fd is readable
-	UVREADABLE UvPollEvent = 1
-
-	// UVWRITABLE fd is writable
-	UVWRITABLE UvPollEvent = 2
-
-	// UVDISCONNECT event is optional in the sense that it may not be reported and the user is free to ignore it, but it can help optimize the shutdown path because an extra read or write call might be avoided.
-	UVDISCONNECT UvPollEvent = 4
-
-	// UVPRIORITIZED event is used to watch for sysfs interrupts or TCP out-of-band messages.
-	UVPRIORITIZED UvPollEvent = 8
-)
-
 // UvPoll handles are used to watch file descriptors for readability, writability and disconnection similar to the purpose of poll(2).
 // The purpose of poll handles is to enable integrating external libraries that rely on the event loop to signal it about the socket status changes, like c-ares or libssh2.
 // Using uv_poll_t for any other purpose is not recommended; uv_tcp_t, uv_udp_t, etc. provide an implementation that is faster and more scalable than what can be achieved with uv_poll_t, especially on Windows.
@@ -49,7 +32,7 @@ func UvPollInit(loop *UvLoop, fd int, data interface{}) (*UvPoll, error) {
 		return nil, ParseUvErr(r)
 	}
 
-	t.data = unsafe.Pointer(&callback_info{data: data})
+	t.data = unsafe.Pointer(&callbackInfo{data: data})
 	return &UvPoll{t, loop.GetNativeLoop(), Handle{(*C.uv_handle_t)(unsafe.Pointer(t)), t.data}}, nil
 }
 
@@ -66,14 +49,14 @@ func UvPollInitSocket(loop *UvLoop, socket C.uv_os_sock_t, data interface{}) (*U
 		return nil, ParseUvErr(r)
 	}
 
-	t.data = unsafe.Pointer(&callback_info{data: data})
+	t.data = unsafe.Pointer(&callbackInfo{data: data})
 	return &UvPoll{t, loop.GetNativeLoop(), Handle{(*C.uv_handle_t)(unsafe.Pointer(t)), t.data}}, nil
 }
 
 // Start (uv_poll_start) Starts polling the file descriptor. events is a bitmask made up of UV_READABLE, UV_WRITABLE, UV_PRIORITIZED and UV_DISCONNECT.
 // As soon as an event is detected the callback will be called with status set to 0, and the detected events set on the events field.
-func (p *UvPoll) Start(event UvPollEvent, cb func(*Handle, int, int)) (err error) {
-	cbi := (*callback_info)(p.p.data)
+func (p *UvPoll) Start(event UV_POLL_EVENT, cb func(*Handle, int, int)) (err error) {
+	cbi := (*callbackInfo)(p.p.data)
 	cbi.poll_cb = cb
 
 	if r := uv_poll_start(p.p, int(event)); r != 0 {

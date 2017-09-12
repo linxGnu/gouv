@@ -21,7 +21,7 @@ type UvAsync struct {
 // UvAsyncInit initialize the prepare handle
 func UvAsyncInit(loop *UvLoop, data interface{}, cb func(*Handle)) (*UvAsync, error) {
 	t := C.mallocAsyncT()
-	t.data = unsafe.Pointer(&callback_info{data: data, async_cb: cb})
+	t.data = unsafe.Pointer(&callbackInfo{data: data, async_cb: cb})
 
 	if loop == nil {
 		loop = UvLoopDefault()
@@ -35,12 +35,13 @@ func UvAsyncInit(loop *UvLoop, data interface{}, cb func(*Handle)) (*UvAsync, er
 }
 
 // Send (uv_async_send) wake up the event loop and call the async handle’s callback.
-func (t *UvAsync) Send() error {
+func (t *UvAsync) Send() (err error) {
 	if r := C.uv_async_send(t.a); r != 0 {
-		return ParseUvErr(r)
+		err = ParseUvErr(r)
+		return
 	}
 
-	return nil
+	return
 }
 
 // Freemem freemem of prepare
