@@ -7,16 +7,23 @@ import (
 	"time"
 )
 
-func initServer(t *testing.T, loop *UvLoop) (connection *UvTCP) {
-	addr, err := IPv4Addr("0.0.0.0", 9999)
+func initServer(t *testing.T, loop *UvLoop, flag *uint, port uint16) (connection *UvTCP) {
+	addr, err := IPv4Addr("0.0.0.0", port)
 	if err != nil {
 		t.Fatal(err)
 		return
 	}
 
-	if connection, err = TCPInit(loop, nil); err != nil {
-		t.Fatal(err)
-		return
+	if flag == nil {
+		if connection, err = TCPInit(loop, nil); err != nil {
+			t.Fatal(err)
+			return
+		}
+	} else {
+		if connection, err = TCPInitEx(loop, *flag, nil); err != nil {
+			t.Fatal(err)
+			return
+		}
 	}
 
 	if err = connection.Bind(addr, 0); err != nil {
@@ -49,12 +56,11 @@ func initServer(t *testing.T, loop *UvLoop) (connection *UvTCP) {
 	return
 }
 
-func TestTCP(t *testing.T) {
-	dfLoop := UvLoopDefault()
+func testTCP(t *testing.T, dfLoop *UvLoop) {
 	defer os.Remove("/tmp/stderr.txt")
 	defer os.Remove("/tmp/stdout.txt")
 
-	connection := initServer(t, dfLoop)
+	connection := initServer(t, dfLoop, nil, 9999)
 
 	clientProcess, err := UvSpawnProcess(dfLoop, &UvProcessOptions{
 		Args:  []string{"python", "test_pkg/test_tcp_client.py"},
@@ -63,18 +69,6 @@ func TestTCP(t *testing.T) {
 		File:  "python",
 		Env:   []string{"PATH"},
 		ExitCb: func(h *Handle, status, sigNum int) {
-			if sigNum != 9 {
-				t.Fatal("Kill failed")
-			}
-
-			if !fileExists("/tmp/stderr.txt") {
-				t.Fatalf("Process stderr not valid")
-			}
-
-			if !fileExists("/tmp/stdout.txt") {
-				t.Fatalf("Process stdout not valid")
-			}
-
 			fmt.Printf("Process exited with status %d and signal %d\n", status, sigNum)
 			fmt.Printf("%p\n", h.ptr.(*UvProcess))
 		},
@@ -83,9 +77,7 @@ func TestTCP(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	go dfLoop.Run(UV_RUN_DEFAULT)
-
-	time.Sleep(2 * time.Second)
+	time.Sleep(1 * time.Second)
 
 	// Unref this process
 	clientProcess.Unref()
@@ -100,8 +92,43 @@ func TestTCP(t *testing.T) {
 	}); err != nil {
 		t.Fatal(err)
 	}
+}
 
-	time.Sleep(2 * time.Second)
+func testTCPEx(t *testing.T, dfLoop *UvLoop) {
+	defer os.Remove("/tmp/stderr2.txt")
+	defer os.Remove("/tmp/stdout2.txt")
 
-	go dfLoop.Close()
+	var flags uint
+	connection := initServer(t, dfLoop, &flags, 10000)
+
+	clientProcess, err := UvSpawnProcess(dfLoop, &UvProcessOptions{
+		Args:  []string{"python", "test_pkg/test_tcp_client2.py"},
+		Cwd:   "./",
+		Flags: UV_PROCESS_DETACHED,
+		File:  "python",
+		Env:   []string{"PATH"},
+		ExitCb: func(h *Handle, status, sigNum int) {
+			fmt.Printf("Process exited with status %d and signal %d\n", status, sigNum)
+			fmt.Printf("%p\n", h.ptr.(*UvProcess))
+		},
+	}, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	time.Sleep(1 * time.Second)
+
+	// Unref this process
+	clientProcess.Unref()
+
+	// Try to kill this proces
+	clientProcess.Kill(9)
+
+	// try to close connection first
+	shutDown := NewUvShutdown(nil)
+	if err := connection.Shutdown(shutDown.s, func(h *Request, status int) {
+		fmt.Println(h, status)
+	}); err != nil {
+		t.Fatal(err)
+	}
 }

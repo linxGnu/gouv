@@ -334,14 +334,17 @@ func (handle *Handle) IsClosing() bool {
 	return uv_is_closing(handle.h)
 }
 
+// uv_tcp_bind (uv_tcp_bind) bind the handle to an address and port. addr should point to an initialized struct sockaddr_in or struct sockaddr_in6.
 func uv_tcp_bind(tcp *C.uv_tcp_t, sa *C.struct_sockaddr, flags uint) C.int {
 	return C.uv_tcp_bind(tcp, sa, C.uint(flags))
 }
 
+// uv_tcp_connect (uv_tcp_connect) establish an IPv4 or IPv6 TCP connection. Provide an initialized TCP handle and an uninitialized uv_connect_t. addr should point to an initialized struct sockaddr_in or struct sockaddr_in6.
 func uv_tcp_connect(req *C.uv_connect_t, tcp *C.uv_tcp_t, sa *C.struct_sockaddr) C.int {
 	return C._uv_tcp_connect(req, tcp, sa)
 }
 
+// uv_pipe_connect (uv_pipe_connect) connect to the Unix domain socket or the named pipe.
 func uv_pipe_connect(req *C.uv_connect_t, pipe *C.uv_pipe_t, name string) {
 	pname := C.CString(name)
 	defer C.free(unsafe.Pointer(pname))

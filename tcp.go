@@ -31,8 +31,8 @@ import (
 // UvTCP handles are used to represent both TCP streams and servers.
 type UvTCP struct {
 	t *C.uv_tcp_t
-	UvStream
 	l *C.uv_loop_t
+	UvStream
 }
 
 // TCPInit (uv_tcp_init) initialize the handle. No socket is created as of yet.
