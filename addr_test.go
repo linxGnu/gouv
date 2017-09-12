@@ -19,6 +19,8 @@ func testAddrV4(host string, expected string) error {
 		return err
 	}
 
+	fmt.Println(addr.GetSockAddr())
+
 	expected = strings.ToLower(expected)
 
 	h := []byte(expected)

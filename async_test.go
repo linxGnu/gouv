@@ -1,6 +1,7 @@
 package gouv
 
 import (
+	"fmt"
 	"testing"
 	"time"
 )
@@ -12,6 +13,7 @@ func TestAsync(t *testing.T) {
 		if h.Data != nil {
 			x := h.Data.(map[int]string)
 			if st, ok := x[1]; ok && st == "a" {
+				fmt.Println(h.ptr.(*UvAsync))
 				return
 			}
 		}

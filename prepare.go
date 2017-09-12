@@ -26,12 +26,14 @@ func UvPrepareInit(loop *UvLoop, data interface{}) (*UvPrepare, error) {
 		loop = UvLoopDefault()
 	}
 
+	res := &UvPrepare{}
+	t.data = unsafe.Pointer(&callbackInfo{data: data, ptr: res})
+	res.p, res.l, res.Handle = t, loop.GetNativeLoop(), Handle{(*C.uv_handle_t)(unsafe.Pointer(t)), t.data, res}
 	if r := C.uv_prepare_init(loop.GetNativeLoop(), t); r != 0 {
 		return nil, ParseUvErr(r)
 	}
 
-	t.data = unsafe.Pointer(&callbackInfo{data: data})
-	return &UvPrepare{t, loop.GetNativeLoop(), Handle{(*C.uv_handle_t)(unsafe.Pointer(t)), t.data}}, nil
+	return res, nil
 }
 
 // Start (uv_prepare_start) start the timer. timeout and repeat are in milliseconds.

@@ -21,17 +21,19 @@ type UvAsync struct {
 // UvAsyncInit initialize the prepare handle
 func UvAsyncInit(loop *UvLoop, data interface{}, cb func(*Handle)) (*UvAsync, error) {
 	t := C.mallocAsyncT()
-	t.data = unsafe.Pointer(&callbackInfo{data: data, async_cb: cb})
 
 	if loop == nil {
 		loop = UvLoopDefault()
 	}
 
+	res := &UvAsync{}
+	t.data = unsafe.Pointer(&callbackInfo{data: data, async_cb: cb, ptr: res})
+	res.a, res.l, res.Handle = t, loop.GetNativeLoop(), Handle{(*C.uv_handle_t)(unsafe.Pointer(t)), t.data, res}
 	if r := uv_async_init(loop.GetNativeLoop(), t); r != 0 {
 		return nil, ParseUvErr(r)
 	}
 
-	return &UvAsync{t, loop.GetNativeLoop(), Handle{(*C.uv_handle_t)(unsafe.Pointer(t)), t.data}}, nil
+	return res, nil
 }
 
 // Send (uv_async_send) wake up the event loop and call the async handle’s callback.

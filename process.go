@@ -172,13 +172,15 @@ func UvSpawnProcess(loop *UvLoop, options *UvProcessOptions, data interface{}) (
 	opt.gid = C.uv_gid_t(options.GID)
 
 	p := C.mallocProcessT()
-	p.data = unsafe.Pointer(&callbackInfo{exit_cb: options.ExitCb, data: data})
 
+	res := &UvProcess{}
+	p.data = unsafe.Pointer(&callbackInfo{exit_cb: options.ExitCb, data: data, ptr: res})
+	res.p, res.l, res.Handle = p, loop.GetNativeLoop(), Handle{(*C.uv_handle_t)(unsafe.Pointer(p)), p.data, res}
 	if r := uv_spawn(loop.GetNativeLoop(), p, opt); r != 0 {
 		return nil, ParseUvErr(r)
 	}
 
-	return &UvProcess{p, loop.GetNativeLoop(), Handle{(*C.uv_handle_t)(unsafe.Pointer(p)), p.data}}, nil
+	return res, nil
 }
 
 // Kill (uv_process_kill) sends the specified signal to the given process handle. Check the documentation on uv_signal_t — Signal handle for signal support, specially on Windows.

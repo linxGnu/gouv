@@ -26,12 +26,14 @@ func UvSignalInit(loop *UvLoop, data interface{}) (*UvSignal, error) {
 		loop = UvLoopDefault()
 	}
 
+	res := &UvSignal{}
+	t.data = unsafe.Pointer(&callbackInfo{data: data, ptr: res})
+	res.s, res.l, res.Handle = t, loop.GetNativeLoop(), Handle{(*C.uv_handle_t)(unsafe.Pointer(t)), t.data, res}
 	if r := C.uv_signal_init(loop.GetNativeLoop(), t); r != 0 {
 		return nil, ParseUvErr(r)
 	}
 
-	t.data = unsafe.Pointer(&callbackInfo{data: data})
-	return &UvSignal{t, loop.GetNativeLoop(), Handle{(*C.uv_handle_t)(unsafe.Pointer(t)), t.data}}, nil
+	return res, nil
 }
 
 // Start (uv_signal_start) start the handle with the given callback, watching for the given signal.

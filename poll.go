@@ -28,12 +28,14 @@ func UvPollInit(loop *UvLoop, fd int, data interface{}) (*UvPoll, error) {
 		loop = UvLoopDefault()
 	}
 
+	res := &UvPoll{}
+	t.data = unsafe.Pointer(&callbackInfo{data: data, ptr: res})
+	res.p, res.l, res.Handle = t, loop.GetNativeLoop(), Handle{(*C.uv_handle_t)(unsafe.Pointer(t)), t.data, res}
 	if r := C.uv_poll_init(loop.GetNativeLoop(), t, C.int(fd)); r != 0 {
 		return nil, ParseUvErr(r)
 	}
 
-	t.data = unsafe.Pointer(&callbackInfo{data: data})
-	return &UvPoll{t, loop.GetNativeLoop(), Handle{(*C.uv_handle_t)(unsafe.Pointer(t)), t.data}}, nil
+	return res, nil
 }
 
 // UvPollInitSocket (uv_poll_init_socket) initialize the handle using a socket descriptor. On Unix this is identical to uv_poll_init().
@@ -45,12 +47,14 @@ func UvPollInitSocket(loop *UvLoop, socket C.uv_os_sock_t, data interface{}) (*U
 		loop = UvLoopDefault()
 	}
 
+	res := &UvPoll{}
+	t.data = unsafe.Pointer(&callbackInfo{data: data, ptr: res})
+	res.p, res.l, res.Handle = t, loop.GetNativeLoop(), Handle{(*C.uv_handle_t)(unsafe.Pointer(t)), t.data, res}
 	if r := C.uv_poll_init_socket(loop.GetNativeLoop(), t, socket); r != 0 {
 		return nil, ParseUvErr(r)
 	}
 
-	t.data = unsafe.Pointer(&callbackInfo{data: data})
-	return &UvPoll{t, loop.GetNativeLoop(), Handle{(*C.uv_handle_t)(unsafe.Pointer(t)), t.data}}, nil
+	return res, nil
 }
 
 // Start (uv_poll_start) Starts polling the file descriptor. events is a bitmask made up of UV_READABLE, UV_WRITABLE, UV_PRIORITIZED and UV_DISCONNECT.

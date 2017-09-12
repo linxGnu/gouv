@@ -104,6 +104,7 @@ while True:
 			}
 
 			fmt.Printf("Process exited with status %d and signal %d\n", status, sigNum)
+			fmt.Printf("%p\n", h.ptr.(*UvProcess))
 		},
 	}, nil)
 	if err != nil {
@@ -118,6 +119,8 @@ while True:
 
 	// Try to kill this proces
 	process.Kill(9)
+
+	fmt.Printf("%p\n", process)
 
 	time.Sleep(1 * time.Second)
 

@@ -30,8 +30,11 @@ func TimerInit(loop *UvLoop, data interface{}) (*UvTimer, error) {
 		return nil, ParseUvErr(r)
 	}
 
-	t.data = unsafe.Pointer(&callbackInfo{data: data})
-	return &UvTimer{t, loop.GetNativeLoop(), Handle{(*C.uv_handle_t)(unsafe.Pointer(t)), t.data}}, nil
+	res := &UvTimer{}
+	t.data = unsafe.Pointer(&callbackInfo{data: data, ptr: res})
+	res.t, res.l, res.Handle = t, loop.GetNativeLoop(), Handle{(*C.uv_handle_t)(unsafe.Pointer(t)), t.data, res}
+
+	return res, nil
 }
 
 // GetLoop get loop if this handle
