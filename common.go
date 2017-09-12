@@ -20,7 +20,7 @@ extern void __uv_idle_cb(uv_idle_t* handle, int status);
 extern void __uv_close_cb(uv_handle_t* handle);
 extern void __uv_prepare_cb(uv_prepare_t* handle);
 extern void __uv_async_cb(uv_prepare_t* handle);
-extern void __uv_check_cb(uv_prepare_t* handle);
+extern void __uv_check_cb(uv_check_t* handle);
 extern void __uv_shutdown_cb(uv_shutdown_t* req, int status);
 extern void __uv_exit_cb(uv_process_t* process, int exit_status, int term_signal);
 
@@ -590,8 +590,7 @@ func __uv_connect_cb(c *C.uv_connect_t, status C.int) {
 
 //export __uv_connection_cb
 func __uv_connection_cb(s *C.uv_stream_t, status C.int) {
-	cbi := (*callbackInfo)(s.data)
-	if cbi.connection_cb != nil {
+	if cbi := (*callbackInfo)(s.data); cbi.connection_cb != nil {
 		cbi.connection_cb(&Handle{(*C.uv_handle_t)(unsafe.Pointer(s)), cbi.data, cbi.ptr}, int(status))
 	}
 }
@@ -632,7 +631,7 @@ func __uv_prepare_cb(h *C.uv_prepare_t) {
 }
 
 //export __uv_check_cb
-func __uv_check_cb(h *C.uv_prepare_t) {
+func __uv_check_cb(h *C.uv_check_t) {
 	if cbi := (*callbackInfo)(h.data); cbi.check_cb != nil {
 		cbi.check_cb(&Handle{(*C.uv_handle_t)(unsafe.Pointer(h)), cbi.data, cbi.ptr})
 	}
@@ -647,7 +646,7 @@ func __uv_async_cb(h *C.uv_prepare_t) {
 
 //export __uv_shutdown_cb
 func __uv_shutdown_cb(s *C.uv_shutdown_t, status C.int) {
-	if cbi := (*callbackInfo)(s.handle.data); cbi.shutdown_cb != nil {
+	if cbi := (*callbackInfo)(s.data); cbi.shutdown_cb != nil {
 		cbi.shutdown_cb(&Request{
 			(*C.uv_req_t)(unsafe.Pointer(s)),
 			&Handle{(*C.uv_handle_t)(unsafe.Pointer(s.handle)), cbi.data, cbi.ptr}}, int(status))

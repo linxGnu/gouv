@@ -9,7 +9,9 @@ uv_shutdown_t* mallocShutdownT() {
 }
 */
 import "C"
-import "unsafe"
+import (
+	"unsafe"
+)
 
 //UvShutdown shutdown request type
 type UvShutdown struct {

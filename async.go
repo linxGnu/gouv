@@ -45,8 +45,3 @@ func (t *UvAsync) Send() (err error) {
 
 	return
 }
-
-// Freemem freemem of prepare
-func (t *UvAsync) Freemem() {
-	C.free(unsafe.Pointer(t.a))
-}

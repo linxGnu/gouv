@@ -70,8 +70,3 @@ func (s *UvSignal) Stop() error {
 
 	return nil
 }
-
-// Freemem freemem of poll handle
-func (s *UvSignal) Freemem() {
-	C.free(unsafe.Pointer(s.s))
-}

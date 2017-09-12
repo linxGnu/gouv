@@ -25,6 +25,7 @@ char* testWriteTCP(uv_stream_t *client, ssize_t nread, uv_buf_t* buf) {
 */
 import "C"
 import (
+	"fmt"
 	"unsafe"
 )
 
@@ -36,39 +37,25 @@ type UvTCP struct {
 }
 
 // TCPInit (uv_tcp_init) initialize the handle. No socket is created as of yet.
-func TCPInit(loop *UvLoop, data interface{}) (*UvTCP, error) {
+func TCPInit(loop *UvLoop, flags *uint, data interface{}) (*UvTCP, error) {
 	t := C.mallocTCPT()
 
 	if loop == nil {
 		loop = UvLoopDefault()
 	}
 
-	if r := C.uv_tcp_init(loop.GetNativeLoop(), t); r != 0 {
-		return nil, ParseUvErr(r)
+	if flags == nil {
+		if r := C.uv_tcp_init(loop.GetNativeLoop(), t); r != 0 {
+			return nil, ParseUvErr(r)
+		}
+	} else {
+		if r := C.uv_tcp_init_ex(loop.GetNativeLoop(), t, C.uint(*flags)); r != 0 {
+			return nil, ParseUvErr(r)
+		}
 	}
 
 	res := &UvTCP{}
 	t.data = unsafe.Pointer(&callbackInfo{ptr: res, data: data})
-	res.s, res.l, res.t, res.Handle = (*C.uv_stream_t)(unsafe.Pointer(t)), loop.GetNativeLoop(), t, Handle{(*C.uv_handle_t)(unsafe.Pointer(t)), t.data, res}
-
-	return res, nil
-}
-
-// TCPInitEx (uv_tcp_init_ex) initialize the handle with the specified flags. At the moment only the lower 8 bits of the flags parameter are used as the socket domain.
-// A socket will be created for the given domain. If the specified domain is AF_UNSPEC no socket is created, just like uv_tcp_init().
-func TCPInitEx(loop *UvLoop, flags uint, data interface{}) (*UvTCP, error) {
-	t := C.mallocTCPT()
-
-	if loop == nil {
-		loop = UvLoopDefault()
-	}
-
-	if r := C.uv_tcp_init_ex(loop.GetNativeLoop(), t, C.uint(flags)); r != 0 {
-		return nil, ParseUvErr(r)
-	}
-
-	res := &UvTCP{}
-	t.data = unsafe.Pointer(&callbackInfo{ptr: res})
 	res.s, res.l, res.t, res.Handle = (*C.uv_stream_t)(unsafe.Pointer(t)), loop.GetNativeLoop(), t, Handle{(*C.uv_handle_t)(unsafe.Pointer(t)), t.data, res}
 
 	return res, nil
@@ -144,7 +131,7 @@ func (t *UvTCP) Connect(req *C.uv_connect_t, sockAddr SockaddrIn, cb func(*Reque
 }
 
 func sampleTCPReadHandling(h *Handle, buf *C.uv_buf_t, nRead C.ssize_t) {
-	C.GoString(C.testWriteTCP(h.ptr.(*UvTCP).s, nRead, buf))
+	fmt.Println(C.GoString(C.testWriteTCP(h.ptr.(*UvTCP).s, nRead, buf)))
 }
 
 // TODO: uv_tcp_getsockname

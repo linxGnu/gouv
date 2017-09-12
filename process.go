@@ -44,22 +44,10 @@ type UvStdioContainerData struct {
 	Fd     int
 }
 
-// Freemem of UvStdioContainerData
-func (c *UvStdioContainerData) Freemem() {
-	C.free(unsafe.Pointer(c.Stream))
-}
-
 // UvStdioContainer container for each stdio handle or fd passed to a child process.
 type UvStdioContainer struct {
 	Flags C.uv_stdio_flags
 	Data  *UvStdioContainerData
-}
-
-// Freemem of UvStdioContainer
-func (c *UvStdioContainer) Freemem() {
-	if c.Data != nil {
-		c.Data.Freemem()
-	}
 }
 
 // UvProcessOptions options for spawning the process, passed to uv_spawn()
@@ -90,15 +78,6 @@ type UvProcessOptions struct {
 
 	// GID libuv can change the child process’ group id. This happens only when the appropriate bits are set in the flags fields.
 	GID uint8
-}
-
-// Freemem freemem of process handle
-func (p *UvProcessOptions) Freemem() {
-	if p.Stdio != nil {
-		for _, v := range p.Stdio {
-			v.Freemem()
-		}
-	}
 }
 
 // UvProcess process handles will spawn a new process and allow the user to control it and establish communication channels with it using streams.
@@ -191,11 +170,6 @@ func (p *UvProcess) Kill(sigNum C.int) (err error) {
 	}
 
 	return
-}
-
-// Freemem freemem of process handle
-func (p *UvProcess) Freemem() {
-	C.free(unsafe.Pointer(p.p))
 }
 
 // Unref unrefernce this process

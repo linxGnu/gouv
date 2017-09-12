@@ -80,8 +80,3 @@ func (p *UvPoll) Stop() (err error) {
 
 	return
 }
-
-// Freemem freemem of poll handle
-func (p *UvPoll) Freemem() {
-	C.free(unsafe.Pointer(p.p))
-}
