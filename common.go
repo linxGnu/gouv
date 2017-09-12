@@ -504,44 +504,20 @@ func uv_buf_init(b []byte) C.uv_buf_t {
 	return C.uv_buf_init((*C.char)(unsafe.Pointer(&b[0])), C.uint(len(b)))
 }
 
-func uv_tcp_nodelay(tcp *C.uv_tcp_t, enable bool) C.int {
-	var v C.int
-	if enable {
-		v = 1
-	}
-	return C.uv_tcp_nodelay(tcp, v)
-}
+// func uv_tcp_getsockname(tcp *C.uv_tcp_t, sa *C.struct_sockaddr) C.int {
+// 	l := C.UV_SIZEOF_SOCKADDR_IN
+// 	return C.uv_tcp_getsockname(tcp, sa, (*C.int)(unsafe.Pointer(&l)))
+// }
 
-func uv_tcp_keepalive(tcp *C.uv_tcp_t, enable bool, delay uint) C.int {
-	var v C.int
-	if enable {
-		v = 1
-	}
-	return C.uv_tcp_keepalive(tcp, v, C.uint(delay))
-}
+// func uv_tcp_getpeername(tcp *C.uv_tcp_t, sa *C.struct_sockaddr) C.int {
+// 	l := C.UV_SIZEOF_SOCKADDR_IN
+// 	return C.uv_tcp_getpeername(tcp, sa, (*C.int)(unsafe.Pointer(&l)))
+// }
 
-func uv_tcp_simultaneous_accepts(tcp *C.uv_tcp_t, enable bool) C.int {
-	var v C.int
-	if enable {
-		v = 1
-	}
-	return C.uv_tcp_simultaneous_accepts(tcp, v)
-}
-
-func uv_tcp_getsockname(tcp *C.uv_tcp_t, sa *C.struct_sockaddr) C.int {
-	l := C.UV_SIZEOF_SOCKADDR_IN
-	return C.uv_tcp_getsockname(tcp, sa, (*C.int)(unsafe.Pointer(&l)))
-}
-
-func uv_tcp_getpeername(tcp *C.uv_tcp_t, sa *C.struct_sockaddr) C.int {
-	l := C.UV_SIZEOF_SOCKADDR_IN
-	return C.uv_tcp_getpeername(tcp, sa, (*C.int)(unsafe.Pointer(&l)))
-}
-
-func uv_udp_getsockname(udp *C.uv_udp_t, sa *C.struct_sockaddr) C.int {
-	l := C.UV_SIZEOF_SOCKADDR_IN
-	return C.uv_udp_getsockname(udp, sa, (*C.int)(unsafe.Pointer(&l)))
-}
+// func uv_udp_getsockname(udp *C.uv_udp_t, sa *C.struct_sockaddr) C.int {
+// 	l := C.UV_SIZEOF_SOCKADDR_IN
+// 	return C.uv_udp_getsockname(udp, sa, (*C.int)(unsafe.Pointer(&l)))
+// }
 
 func uv_timer_start(timer *C.uv_timer_t, timeout uint64, repeat uint64) C.int {
 	return C._uv_timer_start(timer, C.uint64_t(timeout), C.uint64_t(repeat))

@@ -168,6 +168,8 @@ func testIdlePrepareCheckerTimer(t *testing.T, dfLoop *UvLoop) {
 			fmt.Println("Timer is closed")
 		})
 
+		fmt.Println(timer2.IsActive(), timer2.IsClosing())
+
 		timer2.Freemem()
 	}()
 
