@@ -48,7 +48,7 @@ func initServer(t *testing.T, loop *UvLoop, flag *uint, port uint16) (connection
 		client.NoDelay(1)
 		client.KeepAlive(1, 10)
 
-		if r := connection.ServerAccept(client.s); r != 0 {
+		if r := connection.ServerAccept(client.GetStreamHandle()); r != 0 {
 			t.Fatal(ParseUvErr(r))
 		}
 
@@ -83,8 +83,10 @@ func testTCP(t *testing.T, dfLoop *UvLoop) {
 
 	go runSockClient(t, dfLoop)
 
+	go runUvTcpClient(t, dfLoop)
+
 	go func() {
-		time.Sleep(10 * time.Second)
+		time.Sleep(20 * time.Second)
 
 		// try to close connection first
 		shutDown := NewUvShutdown(nil)
@@ -136,7 +138,7 @@ func runPythonClient(t *testing.T, dfLoop *UvLoop) {
 	}()
 }
 
-func runSockClient(t *testing.T, dfLoop *UvLoop) {
+func runUvTcpClient(t *testing.T, dfLoop *UvLoop) {
 	defer func() {
 		if e := recover(); e != nil {
 			fmt.Println(e)
@@ -146,11 +148,44 @@ func runSockClient(t *testing.T, dfLoop *UvLoop) {
 	//
 	time.Sleep(1 * time.Second)
 
-	addr, err := IPv4Addr("0.0.0.0", 10987)
+	serverAddr, err := IPv4Addr("127.0.0.1", testServerPort)
 	if err != nil {
 		t.Fatal(err)
 		return
 	}
+
+	//
+	tcp, _ := TCPInit(dfLoop, nil, nil)
+
+	if r := tcp.Connect(NewUvConnect(nil), serverAddr, func(h *Request, status int) {
+		conn := h.Handle.Ptr.(*UvTCP)
+		fmt.Println("Connected to server", conn)
+	}); r != 0 {
+		t.Fatal(ParseUvErr(r))
+	}
+
+	sampleTCPReadOfClient(tcp)
+
+	time.Sleep(5 * time.Second)
+
+	shutDown := NewUvShutdown(nil)
+	if r := tcp.Shutdown(shutDown.s, func(h *Request, status int) {
+		fmt.Println("Shutdown uv_tcp_t client!", h, status)
+	}); r != 0 {
+		t.Fatal(ParseUvErr(r))
+	} else {
+		fmt.Println("Shutting down uv_tcp_t client!")
+	}
+
+	tcp.ReadStop()
+}
+
+func runSockClient(t *testing.T, dfLoop *UvLoop) {
+	defer func() {
+		if e := recover(); e != nil {
+			fmt.Println(e)
+		}
+	}()
 
 	serverAddr, err := IPv4Addr("127.0.0.1", testServerPort)
 	if err != nil {
@@ -159,7 +194,7 @@ func runSockClient(t *testing.T, dfLoop *UvLoop) {
 	}
 
 	//
-	sock := create_tcp_socket(addr, 0)
+	sock := create_tcp_socket(serverAddr, 0)
 
 	// connect socket first
 	if r := connect_socket(sock, serverAddr); r != 0 {
@@ -173,7 +208,7 @@ func runSockClient(t *testing.T, dfLoop *UvLoop) {
 	}
 	fmt.Println("Poller sock:", poller.GetPollHandle())
 
-	if r := poller.Start(int(UV_READABLE), func(h *Handle, status int, events int) {
+	if r := poller.Start(int(UV_READABLE|UV_WRITABLE), func(h *Handle, status int, events int) {
 		fmt.Println("Poll start callbacked!!!!!", status, events)
 	}); r != 0 {
 		t.Fatal(ParseUvErr(r))
@@ -188,7 +223,7 @@ func runSockClient(t *testing.T, dfLoop *UvLoop) {
 	}
 
 	// Stop poller
-	if r := poller.Stop(); r != 0 {
-		t.Fatal(ParseUvErr(r))
-	}
+	// if r := poller.Stop(); r != 0 {
+	// 	t.Fatal(ParseUvErr(r))
+	// }
 }

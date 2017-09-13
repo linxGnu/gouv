@@ -7,19 +7,9 @@ package gouv
 uv_tcp_t* mallocTCPT() {
 	return (uv_tcp_t*)malloc(sizeof(uv_tcp_t));
 }
-
-char* testReadTCP(uv_stream_t *client, ssize_t nread, uv_buf_t* buf) {
-	char* tmp;
-	tmp = malloc(nread + 1);
-	memcpy(tmp, buf->base, nread);
-	tmp[nread] = '\0';
-
-	return tmp;
-}
 */
 import "C"
 import (
-	"fmt"
 	"unsafe"
 )
 
@@ -87,30 +77,17 @@ func (t *UvTCP) Bind(sockAddr SockaddrIn, flags uint) C.int {
 
 // Connect (uv_tcp_connect) establish an IPv4 or IPv6 TCP connection. Provide an initialized TCP handle and an uninitialized uv_connect_t. addr should point to an initialized struct sockaddr_in or struct sockaddr_in6.
 // The callback is made when the connection has been established or when a connection error happened.
-func (t *UvTCP) Connect(req *C.uv_connect_t, sockAddr SockaddrIn, cb func(*Request, int)) C.int {
-	cbi := (*callbackInfo)(req.data)
+func (t *UvTCP) Connect(req *UvConnect, sockAddr SockaddrIn, cb func(*Request, int)) C.int {
+	cbi := (*callbackInfo)(req.c.data)
 	cbi.connect_cb = cb
+	cbi.ptr = t
 
-	return uv_tcp_connect(req, t.t, sockAddr.GetSockAddr())
+	return uv_tcp_connect(req.c, t.t, sockAddr.GetSockAddr())
 }
 
 // GetTCPHandle get handle
 func (t *UvTCP) GetTCPHandle() *C.uv_tcp_t {
 	return t.t
-}
-
-func sampleTCPReadHandling(h *Handle, buf *C.uv_buf_t, nRead C.ssize_t) {
-	conn := h.Ptr.(*UvTCP)
-
-	st := C.testReadTCP(conn.s, nRead, buf)
-	fmt.Println("Read from client: ", C.GoString(st))
-
-	bufs := MallocUvBuf(1)
-	SetBuf(bufs, 0, BufInit2(st, C.uint(C.strlen(st)+1)))
-
-	conn.Write(NewUvWrite(nil).w, bufs, 1, func(h *Request, status int) {
-		fmt.Println("Write done: ", h.Handle.Ptr.(*UvTCP), status)
-	})
 }
 
 // TODO: uv_tcp_getsockname

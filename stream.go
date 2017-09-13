@@ -10,6 +10,9 @@ uv_shutdown_t* mallocShutdownT() {
 uv_write_t* mallocWriteT() {
 	return (uv_write_t*)malloc(sizeof(uv_write_t));
 }
+uv_connect_t* mallocConnectT() {
+	return (uv_connect_t*)malloc(sizeof(uv_connect_t));
+}
 */
 import "C"
 import (
@@ -46,6 +49,23 @@ func NewUvWrite(data interface{}) *UvWrite {
 	res := &UvWrite{}
 	t.data = unsafe.Pointer(&callbackInfo{data: data, ptr: res})
 	res.w, res.Handle = t, Handle{(*C.uv_handle_t)(unsafe.Pointer(t)), t.data, res}
+
+	return res
+}
+
+// UvConnect connect request type
+type UvConnect struct {
+	c *C.uv_connect_t
+	Handle
+}
+
+// NewUvConnect create new uv connect request
+func NewUvConnect(data interface{}) *UvConnect {
+	t := C.mallocConnectT()
+
+	res := &UvConnect{}
+	t.data = unsafe.Pointer(&callbackInfo{data: data, ptr: res})
+	res.c, res.Handle = t, Handle{(*C.uv_handle_t)(unsafe.Pointer(t)), t.data, res}
 
 	return res
 }
@@ -113,6 +133,7 @@ func (s *UvStream) Write(req *C.uv_write_t, buf *C.uv_buf_t, bufcnt int, cb func
 func (s *UvStream) Write2(req *C.uv_write_t, stream *C.uv_stream_t, buf *C.uv_buf_t, bufcnt int, sendHandle *C.uv_stream_t, cb func(*Request, int)) C.int {
 	cbi := (*callbackInfo)(req.data)
 	cbi.write_cb = cb
+	cbi.ptr = s.Ptr
 
 	return uv_write2(req, s.s, buf, bufcnt, sendHandle)
 }

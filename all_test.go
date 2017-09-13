@@ -71,6 +71,9 @@ func TestAll(t *testing.T) {
 	testTCP(t, nil)
 
 	//
+	testSignal(t)
+
+	//
 	if r := poller.Start(int(UV_READABLE), func(h *Handle, status int, events int) {
 		fmt.Println("Poll start callbacked!!!!!", status, events)
 	}); r != 0 {
@@ -79,6 +82,9 @@ func TestAll(t *testing.T) {
 	if r := poller.Stop(); r != 0 {
 		t.Fatal(ParseUvErr(r))
 	}
+
+	//
+	go testPipe(t, nil)
 
 	go loop.Run(UV_RUN_DEFAULT)
 

@@ -18,8 +18,8 @@ type UvPipe struct {
 	UvStream
 }
 
-// PipeInit (uv_pipe_init) initialize a pipe handle. The ipc argument is a boolean to indicate if this pipe will be used for handle passing between processes.
-func PipeInit(loop *UvLoop, ipc int, data interface{}) (*UvPipe, error) {
+// UvPipeInit (uv_pipe_init) initialize a pipe handle. The ipc argument is a boolean to indicate if this pipe will be used for handle passing between processes.
+func UvPipeInit(loop *UvLoop, ipc int, data interface{}) (*UvPipe, error) {
 	t := C.mallocPipeT()
 
 	if loop == nil {
@@ -54,11 +54,12 @@ func (p *UvPipe) Bind(name string) C.int {
 
 // Connect (uv_pipe_connect) connect to the Unix domain socket or the named pipe.
 // Note: paths on Unix get truncated to sizeof(sockaddr_un.sun_path) bytes, typically between 92 and 108 bytes.
-func (p *UvPipe) Connect(req *C.uv_connect_t, name string, cb func(*Request, int)) {
-	cbi := (*callbackInfo)(req.data)
+func (p *UvPipe) Connect(req *UvConnect, name string, cb func(*Request, int)) {
+	cbi := (*callbackInfo)(req.c.data)
 	cbi.connect_cb = cb
+	cbi.ptr = p
 
-	uv_pipe_connect(req, p.p, name)
+	uv_pipe_connect(req.c, p.p, name)
 }
 
 // PendingInstances (uv_pipe_pending_instances) set the number of pending pipe instance handles when the pipe server is waiting for connections.
@@ -68,8 +69,8 @@ func (p *UvPipe) PendingInstances(count int) {
 }
 
 // PendingCount (uv_pipe_pending_count) return number of pending instances.
-func (p *UvPipe) PendingCount() int {
-	return int(C.uv_pipe_pending_count(p.p))
+func (p *UvPipe) PendingCount() C.int {
+	return C.uv_pipe_pending_count(p.p)
 }
 
 // PendingType (uv_pipe_pending_type) used to receive handles over IPC pipesu

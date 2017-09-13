@@ -4,6 +4,14 @@ package gouv
 /*
 #include <uv.h>
 #include <stdlib.h>
+uv_loop_t* create_loop()
+{
+    uv_loop_t *loop = malloc(sizeof(uv_loop_t));
+    if (loop) {
+      uv_loop_init(loop);
+    }
+    return loop;
+}
 */
 import "C"
 
@@ -20,6 +28,11 @@ func (uvl *UvLoop) GetNativeLoop() *C.uv_loop_t {
 // UvLoopDefault (uv_default_loop) return uv_loop default
 func UvLoopDefault() *UvLoop {
 	return &UvLoop{loop: C.uv_default_loop()}
+}
+
+// UvLoopCreate malloc and create new loop
+func UvLoopCreate() *UvLoop {
+	return &UvLoop{loop: C.create_loop()}
 }
 
 // Init (uv_loop_init) initialize uv_loop

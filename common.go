@@ -159,7 +159,7 @@ type callbackInfo struct {
 	check_cb      func(*Handle)
 	shutdown_cb   func(*Request, int)
 	timer_cb      func(*Handle, int)
-	signal_cb     func(*Handle, C.int)
+	signal_cb     func(*Handle, int)
 	idle_cb       func(*Handle, int)
 	exit_cb       func(*Handle, int, int)
 	async_cb      func(*Handle)
@@ -197,13 +197,8 @@ func uv_tcp_connect(req *C.uv_connect_t, tcp *C.uv_tcp_t, sa *C.struct_sockaddr)
 func uv_pipe_connect(req *C.uv_connect_t, pipe *C.uv_pipe_t, name string) {
 	pname := C.CString(name)
 	defer C.free(unsafe.Pointer(pname))
-	C._uv_pipe_connect(req, pipe, pname)
-}
 
-func uv_pipe_bind(pipe *C.uv_pipe_t, name string) C.int {
-	pname := C.CString(name)
-	defer C.free(unsafe.Pointer(pname))
-	return C.uv_pipe_bind(pipe, pname)
+	C._uv_pipe_connect(req, pipe, pname)
 }
 
 // uv_is_active (uv_is_active) returns if the handle is active.
@@ -447,10 +442,10 @@ func test_OpenFile(path string) C.int {
 
 //export __uv_connect_cb
 func __uv_connect_cb(c *C.uv_connect_t, status C.int) {
-	if cbi := (*callbackInfo)(c.handle.data); cbi.connect_cb != nil {
+	if cbi := (*callbackInfo)(c.data); cbi.connect_cb != nil {
 		cbi.connect_cb(&Request{
 			(*C.uv_req_t)(unsafe.Pointer(c)),
-			&Handle{(*C.uv_handle_t)(unsafe.Pointer(c.handle)), cbi.data, cbi.ptr}}, int(status))
+			&Handle{(*C.uv_handle_t)(unsafe.Pointer(c)), cbi.data, cbi.ptr}}, int(status))
 	}
 }
 
@@ -559,7 +554,7 @@ func __uv_poll_cb(p *C.uv_poll_t, status, events C.int) {
 //export __uv_signal_cb
 func __uv_signal_cb(s *C.uv_signal_t, sigNum C.int) {
 	if cbi := (*callbackInfo)(s.data); cbi.signal_cb != nil {
-		cbi.signal_cb(&Handle{(*C.uv_handle_t)(unsafe.Pointer(s)), cbi.data, cbi.ptr}, sigNum)
+		cbi.signal_cb(&Handle{(*C.uv_handle_t)(unsafe.Pointer(s)), cbi.data, cbi.ptr}, int(sigNum))
 	}
 }
 
@@ -576,18 +571,3 @@ func __uv_exit_cb(pc *C.uv_process_t, exit_status C.int, term_signal C.int) {
 		cbi.exit_cb(&Handle{(*C.uv_handle_t)(unsafe.Pointer(pc)), cbi.data, cbi.ptr}, int(exit_status), int(term_signal))
 	}
 }
-
-// func uv_tcp_getsockname(tcp *C.uv_tcp_t, sa *C.struct_sockaddr) C.int {
-// 	l := C.UV_SIZEOF_SOCKADDR_IN
-// 	return C.uv_tcp_getsockname(tcp, sa, (*C.int)(unsafe.Pointer(&l)))
-// }
-
-// func uv_tcp_getpeername(tcp *C.uv_tcp_t, sa *C.struct_sockaddr) C.int {
-// 	l := C.UV_SIZEOF_SOCKADDR_IN
-// 	return C.uv_tcp_getpeername(tcp, sa, (*C.int)(unsafe.Pointer(&l)))
-// }
-
-// func uv_udp_getsockname(udp *C.uv_udp_t, sa *C.struct_sockaddr) C.int {
-// 	l := C.UV_SIZEOF_SOCKADDR_IN
-// 	return C.uv_udp_getsockname(udp, sa, (*C.int)(unsafe.Pointer(&l)))
-// }

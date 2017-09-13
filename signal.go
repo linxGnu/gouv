@@ -37,7 +37,7 @@ func UvSignalInit(loop *UvLoop, data interface{}) (*UvSignal, error) {
 }
 
 // Start (uv_signal_start) start the handle with the given callback, watching for the given signal.
-func (s *UvSignal) Start(cb func(*Handle, C.int), sigNum int) C.int {
+func (s *UvSignal) Start(cb func(*Handle, int), sigNum int) C.int {
 	cbi := (*callbackInfo)(s.s.data)
 	cbi.signal_cb = cb
 
@@ -45,7 +45,7 @@ func (s *UvSignal) Start(cb func(*Handle, C.int), sigNum int) C.int {
 }
 
 // StartOneShot (uv_signal_start_oneshot) same functionality as uv_signal_start() but the signal handler is reset the moment the signal is received.
-func (s *UvSignal) StartOneShot(cb func(*Handle, C.int), sigNum int) C.int {
+func (s *UvSignal) StartOneShot(cb func(*Handle, int), sigNum int) C.int {
 	cbi := (*callbackInfo)(s.s.data)
 	cbi.signal_cb = cb
 
