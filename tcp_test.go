@@ -2,7 +2,6 @@ package gouv
 
 import (
 	"fmt"
-	"os"
 	"testing"
 	"time"
 )
@@ -19,42 +18,44 @@ func initServer(t *testing.T, loop *UvLoop, flag *uint, port uint16) (connection
 		return
 	}
 
-	if err = connection.Bind(addr, 0); err != nil {
+	if r := connection.Bind(addr, 0); r != 0 {
 		if connection != nil {
 			connection.Freemem()
 		}
 
-		t.Fatal(err)
+		t.Fatal(ParseUvErr(r))
 		return
 	}
 
-	if err = connection.SimultaneousAccepts(1); err != nil {
+	fmt.Println(connection.IsReadable(), connection.IsWritable())
+
+	if r := connection.SimultaneousAccepts(1); r != 0 {
 		if connection != nil {
 			connection.Freemem()
 		}
 
-		t.Fatal(err)
+		t.Fatal(ParseUvErr(r))
 		return
 	}
 
-	if err = connection.Listen(128, func(h *Handle, status int) {
+	if r := connection.Listen(128, func(h *Handle, status int) {
 		client, _ := TCPInit(loop, nil, nil)
 		client.NoDelay(1)
 		client.KeepAlive(1, 10)
 
-		if e := connection.ServerAccept(client.s); e != nil {
-			t.Fatal(e)
+		if r := connection.ServerAccept(client.s); r != 0 {
+			t.Fatal(ParseUvErr(r))
 		}
 
 		fmt.Println("Got connection", client)
 
 		client.ReadStart(sampleTCPReadHandling)
-	}); err != nil {
+	}); r != 0 {
 		if connection != nil {
 			connection.Freemem()
 		}
 
-		t.Fatal(err)
+		t.Fatal(ParseUvErr(r))
 		return
 	}
 
@@ -62,8 +63,8 @@ func initServer(t *testing.T, loop *UvLoop, flag *uint, port uint16) (connection
 }
 
 func testTCP(t *testing.T, dfLoop *UvLoop) {
-	defer os.Remove("/tmp/stderr.txt")
-	defer os.Remove("/tmp/stdout.txt")
+	// defer os.Remove("/tmp/stderr.txt")
+	// defer os.Remove("/tmp/stdout.txt")
 
 	connection := initServer(t, dfLoop, nil, 9999)
 
@@ -83,16 +84,21 @@ func testTCP(t *testing.T, dfLoop *UvLoop) {
 	}
 
 	go func() {
-		time.Sleep(2 * time.Second)
+		time.Sleep(5 * time.Second)
 
 		// try to close connection first
 		shutDown := NewUvShutdown(nil)
-		if err := connection.Shutdown(shutDown.s, func(h *Request, status int) {
+		if r := connection.Shutdown(shutDown.s, func(h *Request, status int) {
 			fmt.Println("Shutting down tcp server", h, status)
-		}); err != nil {
-			t.Fatal(err)
+		}); r != 0 {
+			t.Fatal(ParseUvErr(r))
 		} else {
 			fmt.Println("Shutting down tcp server")
+		}
+
+		// stop read
+		if r := connection.ReadStop(); r != 0 {
+			t.Fatal(ParseUvErr(r))
 		}
 
 		// Unref this process

@@ -24,8 +24,8 @@ func testAsync(t *testing.T, dfLoop *UvLoop) {
 
 	go func() {
 		time.Sleep(100 * time.Millisecond)
-		if err = async.Send(); err != nil {
-			t.Fatal(err)
+		if r := async.Send(); r != 0 {
+			t.Fatal(ParseUvErr(r))
 		}
 	}()
 }

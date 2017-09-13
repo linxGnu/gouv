@@ -8,7 +8,6 @@ import (
 )
 
 func testSpawnChildProcess(t *testing.T, dfLoop *UvLoop) {
-
 	// spawn new process
 	process, err := UvSpawnProcess(dfLoop, &UvProcessOptions{
 		Args:  []string{"ls", "-lah"},

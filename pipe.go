@@ -39,27 +39,17 @@ func PipeInit(loop *UvLoop, ipc int, data interface{}) (*UvPipe, error) {
 
 // Open (uv_pipe_open) open an existing file descriptor or HANDLE as a pipe.
 // Note: the passed file descriptor or HANDLE is not checked for its type, but it’s required that it represents a valid pipe.
-func (p *UvPipe) Open(file C.uv_file) (err error) {
-	if r := C.uv_pipe_open(p.p, file); r != 0 {
-		err = ParseUvErr(r)
-		return
-	}
-
-	return
+func (p *UvPipe) Open(file C.uv_file) C.int {
+	return C.uv_pipe_open(p.p, file)
 }
 
 // Bind (uv_pipe_bind) bind the pipe to a file path (Unix) or a name (Windows).
 // Note: paths on Unix get truncated to sizeof(sockaddr_un.sun_path) bytes, typically between 92 and 108 bytes.
-func (p *UvPipe) Bind(name string) (err error) {
+func (p *UvPipe) Bind(name string) C.int {
 	tmp := C.CString(name)
 	defer C.free(unsafe.Pointer(tmp))
 
-	if r := C.uv_pipe_bind(p.p, tmp); r != 0 {
-		err = ParseUvErr(r)
-		return
-	}
-
-	return
+	return C.uv_pipe_bind(p.p, tmp)
 }
 
 // Connect (uv_pipe_connect) connect to the Unix domain socket or the named pipe.

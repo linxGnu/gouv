@@ -163,13 +163,8 @@ func UvSpawnProcess(loop *UvLoop, options *UvProcessOptions, data interface{}) (
 }
 
 // Kill (uv_process_kill) sends the specified signal to the given process handle. Check the documentation on uv_signal_t — Signal handle for signal support, specially on Windows.
-func (p *UvProcess) Kill(sigNum C.int) (err error) {
-	if r := C.uv_process_kill(p.p, sigNum); r != 0 {
-		err = ParseUvErr(r)
-		return
-	}
-
-	return
+func (p *UvProcess) Kill(sigNum C.int) C.int {
+	return C.uv_process_kill(p.p, sigNum)
 }
 
 // Unref unrefernce this process
@@ -178,10 +173,6 @@ func (p *UvProcess) Unref() {
 }
 
 // UvKill (uv_kill) sends the specified signal to the given PID. Check the documentation on uv_signal_t — Signal handle for signal support, specially on Windows.
-func UvKill(pid int, sigNum C.int) error {
-	if r := C.uv_kill(C.int(pid), sigNum); r != 0 {
-		return ParseUvErr(r)
-	}
-
-	return nil
+func UvKill(pid int, sigNum C.int) C.int {
+	return C.uv_kill(C.int(pid), sigNum)
 }

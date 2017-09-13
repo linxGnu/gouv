@@ -23,47 +23,30 @@ func UvLoopDefault() *UvLoop {
 }
 
 // Init (uv_loop_init) initialize uv_loop
-func (uvl *UvLoop) Init() error {
-	if r := C.uv_loop_init(uvl.loop); r != 0 {
-		return ParseUvErr(r)
-	}
-
-	return nil
+func (uvl *UvLoop) Init() C.int {
+	return C.uv_loop_init(uvl.loop)
 }
 
 // Close (uv_loop_close) releases all internal loop resources.
 // Call this function only when the loop has finished executing and all open handles and requests have been closed, or it will return UV_EBUSY.
 // After this function returns, the user can free the memory allocated for the loop.
-func (uvl *UvLoop) Close() error {
-	if r := C.uv_loop_close(uvl.loop); r != 0 {
-		return ParseUvErr(r)
-	}
-
-	return nil
+func (uvl *UvLoop) Close() C.int {
+	return C.uv_loop_close(uvl.loop)
 }
 
 // Alive (uv_loop_alive) returns non-zero if there are active handles or request in the loop.
-func (uvl *UvLoop) Alive() int {
-	return int(C.uv_loop_alive(uvl.loop))
+func (uvl *UvLoop) Alive() C.int {
+	return C.uv_loop_alive(uvl.loop)
 }
 
 // Fork (uv_loop_fork) reinitialize any kernel state necessary in the child process after a fork(2) system call.
-func (uvl *UvLoop) Fork() error {
-	if r := C.uv_loop_fork(uvl.loop); r != 0 {
-		return ParseUvErr(r)
-	}
-
-	return nil
+func (uvl *UvLoop) Fork() C.int {
+	return C.uv_loop_fork(uvl.loop)
 }
 
 // Run (uv_run) This function runs the event loop. It will act differently depending on the specified mode.
-func (uvl *UvLoop) Run(mode UV_RUN_MODE) (err error) {
-	if r := C.uv_run(uvl.loop, C.uv_run_mode(mode)); r != 0 {
-		err = ParseUvErr(r)
-		return
-	}
-
-	return
+func (uvl *UvLoop) Run(mode UV_RUN_MODE) C.int {
+	return C.uv_run(uvl.loop, C.uv_run_mode(mode))
 }
 
 // Stop (uv_stop) Stop the event loop, causing uv_run() to end as soon as possible.
@@ -85,8 +68,8 @@ func (uvl *UvLoop) Now() uint64 {
 }
 
 // BackendFD (uv_backend_fd) get backend file descriptor. Only kqueue, epoll and event ports are supported.
-func (uvl *UvLoop) BackendFD() int {
-	return int(C.uv_backend_fd(uvl.loop))
+func (uvl *UvLoop) BackendFD() C.int {
+	return C.uv_backend_fd(uvl.loop)
 }
 
 // BackendTimeout (uv_backend_timeout) Get the poll timeout. The return value is in milliseconds, or -1 for no timeout.

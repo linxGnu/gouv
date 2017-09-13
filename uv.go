@@ -20,6 +20,10 @@ func GetLibuvVersionString() string {
 
 // ParseUvErr parsing uv error
 func ParseUvErr(r C.int) error {
+	if r == 0 {
+		return nil
+	}
+
 	return errors.New(C.GoString(C.uv_strerror(r)))
 }
 

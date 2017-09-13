@@ -43,36 +43,21 @@ func (t *UvTimer) GetLoop() *UvLoop {
 }
 
 // Start (uv_timer_start) start the timer. timeout and repeat are in milliseconds.
-func (t *UvTimer) Start(cb func(*Handle, int), timeout uint64, repeat uint64) (err error) {
+func (t *UvTimer) Start(cb func(*Handle, int), timeout uint64, repeat uint64) C.int {
 	cbi := (*callbackInfo)(t.t.data)
 	cbi.timer_cb = cb
 
-	if r := uv_timer_start(t.t, timeout, repeat); r != 0 {
-		err = ParseUvErr(r)
-		return
-	}
-
-	return
+	return uv_timer_start(t.t, timeout, repeat)
 }
 
 // Stop (uv_timer_stop) the timer, the callback will not be called anymore.
-func (t *UvTimer) Stop() (err error) {
-	if r := C.uv_timer_stop(t.t); r != 0 {
-		err = ParseUvErr(r)
-		return
-	}
-
-	return
+func (t *UvTimer) Stop() C.int {
+	return C.uv_timer_stop(t.t)
 }
 
 // Again (uv_timer_again) stop the timer, and if it is repeating restart it using the repeat value as the timeout. If the timer has never been started before it returns UV_EINVAL
-func (t *UvTimer) Again() (err error) {
-	if r := C.uv_timer_again(t.t); r != 0 {
-		err = ParseUvErr(r)
-		return
-	}
-
-	return
+func (t *UvTimer) Again() C.int {
+	return C.uv_timer_again(t.t)
 }
 
 // SetRepeat (uv_timer_set_repeat) set the repeat interval value in milliseconds. The timer will be scheduled to run on the given interval, regardless of the callback execution duration, and will follow normal timer semantics in the case of a time-slice overrun.

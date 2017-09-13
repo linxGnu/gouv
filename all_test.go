@@ -13,8 +13,8 @@ func TestAll(t *testing.T) {
 		t.Fatalf("NewUvLoopDefault failed")
 	}
 
-	if err := loop.Init(); err != nil {
-		t.Fatal(err)
+	if r := loop.Init(); r != 0 {
+		t.Fatal(ParseUvErr(r))
 	}
 
 	if r := loop.GetNativeLoop(); r == nil {
@@ -44,8 +44,8 @@ func TestAll(t *testing.T) {
 
 	//
 	loop = UvLoopDefault()
-	if err := loop.Init(); err != nil {
-		t.Fatal(err)
+	if r := loop.Init(); r != 0 {
+		t.Fatal(ParseUvErr(r))
 	}
 
 	//
@@ -160,8 +160,8 @@ func testIdlePrepareCheckerTimer(t *testing.T, dfLoop *UvLoop) {
 
 		fmt.Println(timer2.GetRepeat())
 
-		if err := timer2.Stop(); err != nil {
-			t.Fatal(err)
+		if r := timer2.Stop(); r != 0 {
+			t.Fatal(ParseUvErr(r))
 		}
 
 		timer2.Close(func(h *Handle) {
@@ -178,29 +178,29 @@ func testIdlePrepareCheckerTimer(t *testing.T, dfLoop *UvLoop) {
 
 		fmt.Println(timer1.GetRepeat())
 
-		if err := timer1.Stop(); err != nil {
-			panic(err)
+		if r := timer1.Stop(); r != 0 {
+			t.Fatal(ParseUvErr(r))
 		}
 
 		timer1.Freemem()
 
 		// now stop idle
-		if err := idle.Stop(); err != nil {
-			panic(err)
+		if r := idle.Stop(); r != 0 {
+			t.Fatal(ParseUvErr(r))
 		}
 
 		idle.Freemem()
 
 		// now stop prepare
-		if err := prepare.Stop(); err != nil {
-			panic(err)
+		if r := prepare.Stop(); r != 0 {
+			t.Fatal(ParseUvErr(r))
 		}
 
 		prepare.Freemem()
 
 		// now stop checker
-		if err := checker.Stop(); err != nil {
-			panic(err)
+		if r := checker.Stop(); r != 0 {
+			t.Fatal(ParseUvErr(r))
 		}
 
 		checker.Freemem()

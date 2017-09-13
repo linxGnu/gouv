@@ -59,24 +59,14 @@ func UvPollInitSocket(loop *UvLoop, socket C.uv_os_sock_t, data interface{}) (*U
 
 // Start (uv_poll_start) Starts polling the file descriptor. events is a bitmask made up of UV_READABLE, UV_WRITABLE, UV_PRIORITIZED and UV_DISCONNECT.
 // As soon as an event is detected the callback will be called with status set to 0, and the detected events set on the events field.
-func (p *UvPoll) Start(event UV_POLL_EVENT, cb func(*Handle, int, int)) (err error) {
+func (p *UvPoll) Start(event UV_POLL_EVENT, cb func(*Handle, int, int)) C.int {
 	cbi := (*callbackInfo)(p.p.data)
 	cbi.poll_cb = cb
 
-	if r := uv_poll_start(p.p, int(event)); r != 0 {
-		err = ParseUvErr(r)
-		return
-	}
-
-	return
+	return uv_poll_start(p.p, int(event))
 }
 
 // Stop (uv_poll_stop) stop polling the file descriptor, the callback will no longer be called.
-func (p *UvPoll) Stop() (err error) {
-	if r := C.uv_poll_stop(p.p); r != 0 {
-		err = ParseUvErr(r)
-		return
-	}
-
-	return
+func (p *UvPoll) Stop() C.int {
+	return C.uv_poll_stop(p.p)
 }

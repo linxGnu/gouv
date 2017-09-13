@@ -33,6 +33,16 @@ static void _uv_alloc_cb(uv_handle_t* handle, size_t suggested_size, uv_buf_t* b
         *buf = uv_buf_init(base, suggested_size);
 }
 
+static uv_buf_t* uv_buf_malloc(unsigned int len) {
+	uv_buf_t* buf;
+	buf = malloc(len * sizeof(uv_buf_t));
+	return buf;
+}
+
+static void uv_buf_set(uv_buf_t* bufs, uint index, uv_buf_t buf) {
+	bufs[index] = buf;
+}
+
 static int _uv_udp_send(uv_udp_send_t* req, uv_udp_t* handle, uv_buf_t bufs[], unsigned int bufcnt, struct sockaddr* addr) {
 	return uv_udp_send(req, handle, bufs, bufcnt, addr, __uv_udp_send_cb);
 }
@@ -150,6 +160,8 @@ static void close_data(struct client_request_data *data)
         free(data->response);
     free(data);
 }
+
+
 
 #cgo darwin LDFLAGS: -luv
 #cgo linux LDFLAGS: -ldl -luv -lpthread -lrt -lm
@@ -500,8 +512,25 @@ func uv_udp_recv_stop(udp *C.uv_udp_t) C.int {
 	return C.uv_udp_recv_stop(udp)
 }
 
-func uv_buf_init(b []byte) C.uv_buf_t {
+// BufInit (uv_buf_init) Constructor for uv_buf_t.
+// Due to platform differences the user cannot rely on the ordering of the base and len members of the uv_buf_t struct. The user is responsible for freeing base after the uv_buf_t is done. Return struct passed by value.
+func BufInit(b []byte) C.uv_buf_t {
 	return C.uv_buf_init((*C.char)(unsafe.Pointer(&b[0])), C.uint(len(b)))
+}
+
+// BufInit2 (uv_buf_init) constructor for uv_buf_t from char*
+func BufInit2(b *C.char, size C.uint) C.uv_buf_t {
+	return C.uv_buf_init(b, C.uint(size))
+}
+
+// MallocUvBuf malloc in C memory of array of uv_buf_t
+func MallocUvBuf(size C.uint) *C.uv_buf_t {
+	return C.uv_buf_malloc(size)
+}
+
+// SetBuf set uv_buf_t inside bufs
+func SetBuf(bufs *C.uv_buf_t, index uint, buf C.uv_buf_t) {
+	C.uv_buf_set(bufs, C.uint(index), buf)
 }
 
 // func uv_tcp_getsockname(tcp *C.uv_tcp_t, sa *C.struct_sockaddr) C.int {

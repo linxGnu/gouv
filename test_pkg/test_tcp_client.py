@@ -1,5 +1,6 @@
 import socket
 import sys
+from time import ctime
 
 path = "/tmp"
 errorLog = open(path + "/stderr.txt", "w", 1)
@@ -25,4 +26,4 @@ while count < 100:
     # receive the response data (4096 is recommended buffer size)
     response = client.recv(4096)
 
-    print response
+    print "(" + str(count) + ") " + ctime() + " : " + response + "$"
