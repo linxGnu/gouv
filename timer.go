@@ -74,3 +74,8 @@ func (t *UvTimer) GetRepeat() uint64 {
 func (t *UvTimer) Freemem() {
 	C.free(unsafe.Pointer(t.t))
 }
+
+// GetTimerHandle get handle
+func (t *UvTimer) GetTimerHandle() *C.uv_timer_t {
+	return t.t
+}

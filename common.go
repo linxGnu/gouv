@@ -2,170 +2,7 @@ package gouv
 
 // #cgo pkg-config: libuv
 /*
-#include <stdlib.h>
-#include <uv.h>
-
-#define UV_SIZEOF_SOCKADDR_IN ((int)sizeof(struct sockaddr_in))
-
-extern void __uv_connect_cb(uv_connect_t* req, int status);
-extern void __uv_connection_cb(uv_stream_t* stream, int status);
-extern void __uv_write_cb(uv_write_t* req, int status);
-extern void __uv_read_cb(uv_stream_t* stream, ssize_t nread, uv_buf_t* buf);
-extern void __uv_udp_recv_cb(uv_udp_t* handle, ssize_t nread, uv_buf_t* buf, struct sockaddr* addr, unsigned flags);
-extern void __uv_udp_send_cb(uv_udp_send_t* req, int status);
-extern void __uv_timer_cb(uv_timer_t* timer, int status);
-extern void __uv_poll_cb(uv_poll_t* p, int status, int events);
-extern void __uv_signal_cb(uv_signal_t* s, int signum);
-extern void __uv_idle_cb(uv_idle_t* handle, int status);
-extern void __uv_close_cb(uv_handle_t* handle);
-extern void __uv_prepare_cb(uv_prepare_t* handle);
-extern void __uv_async_cb(uv_prepare_t* handle);
-extern void __uv_check_cb(uv_check_t* handle);
-extern void __uv_shutdown_cb(uv_shutdown_t* req, int status);
-extern void __uv_exit_cb(uv_process_t* process, int exit_status, int term_signal);
-
-static void _uv_alloc_cb(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf) {
-	char *base;
-    base = (char *)calloc(1, suggested_size);
-    if (!base)
-        *buf = uv_buf_init(NULL, 0);
-    else
-        *buf = uv_buf_init(base, suggested_size);
-}
-
-static uv_buf_t* uv_buf_malloc(unsigned int len) {
-	uv_buf_t* buf;
-	buf = malloc(len * sizeof(uv_buf_t));
-	return buf;
-}
-
-static void uv_buf_set(uv_buf_t* bufs, uint index, uv_buf_t buf) {
-	bufs[index] = buf;
-}
-
-static int _uv_udp_send(uv_udp_send_t* req, uv_udp_t* handle, uv_buf_t bufs[], unsigned int bufcnt, struct sockaddr* addr) {
-	return uv_udp_send(req, handle, bufs, bufcnt, addr, __uv_udp_send_cb);
-}
-
-static int _uv_udp_recv_start(uv_udp_t* udp) {
-	return uv_udp_recv_start(udp, _uv_alloc_cb, __uv_udp_recv_cb);
-}
-
-static int _uv_tcp_connect(uv_connect_t* req, uv_tcp_t* handle, struct sockaddr* address) {
-	return uv_tcp_connect(req, handle, address, __uv_connect_cb);
-}
-
-static void _uv_pipe_connect(uv_connect_t* req, uv_pipe_t* handle, const char* name) {
-	uv_pipe_connect(req, handle, name, __uv_connect_cb);
-}
-
-static int _uv_listen(uv_stream_t* stream, int backlog) {
-	return uv_listen(stream, backlog, __uv_connection_cb);
-}
-
-static int _uv_read_start(uv_stream_t* stream) {
-	return uv_read_start(stream, _uv_alloc_cb, __uv_read_cb);
-}
-
-static int _uv_write(uv_write_t* req, uv_stream_t* handle, uv_buf_t bufs[], int bufcnt) {
-	return uv_write(req, handle, bufs, bufcnt, __uv_write_cb);
-}
-
-static int _uv_write2(uv_write_t* req, uv_stream_t* handle, uv_buf_t bufs[], int bufcnt, uv_stream_t* send_handle) {
-	return uv_write2(req, handle, bufs, bufcnt, send_handle, __uv_write_cb);
-}
-
-static int _uv_try_write(uv_stream_t* handle, uv_buf_t bufs[], int bufcnt) {
-	return uv_try_write(handle, bufs, bufcnt);
-}
-
-static void _uv_close(uv_handle_t* handle) {
-	uv_close(handle, __uv_close_cb);
-}
-
-static int _uv_shutdown(uv_shutdown_t* req, uv_stream_t* handle) {
-	return uv_shutdown(req, handle, __uv_shutdown_cb);
-}
-
-static int _uv_timer_start(uv_timer_t* timer, uint64_t timeout, uint64_t repeat) {
-	return uv_timer_start(timer, __uv_timer_cb, timeout, repeat);
-}
-
-static int _uv_poll_start(uv_poll_t* p, int events) {
-	return uv_poll_start(p, events, __uv_poll_cb);
-}
-
-static int _uv_signal_start(uv_signal_t* s, int sigNum) {
-	return uv_signal_start(s, __uv_signal_cb, sigNum);
-}
-
-static int _uv_signal_start_oneshot(uv_signal_t* s, int sigNum) {
-	return uv_signal_start_oneshot(s, __uv_signal_cb, sigNum);
-}
-
-static int _uv_prepare_start(uv_prepare_t* handle) {
-	return uv_prepare_start(handle, __uv_prepare_cb);
-}
-
-static int _uv_async_init(uv_loop_t* loop, uv_async_t* handle) {
-	return uv_async_init(loop, handle, __uv_async_cb);
-}
-
-static int _uv_check_start(uv_check_t* handle) {
-	return uv_check_start(handle, __uv_check_cb);
-}
-
-static int _uv_idle_start(uv_idle_t* idle) {
-	return uv_idle_start(idle, __uv_idle_cb);
-}
-
-static int _uv_spawn(uv_loop_t* loop, uv_process_t* process, uv_process_options_t* options) {
-	options->exit_cb = __uv_exit_cb;
-	return uv_spawn(loop, process, options);
-}
-
-// Stores everything about a request
-struct client_request_data
-{
-	 time_t start;
-	 char *text;
-	 size_t text_len;
-	 char *response;
-	 int work_started;
-	 uv_tcp_t *client;
-	 uv_work_t *work_req;
-	 uv_write_t *write_req;
-	 uv_timer_t *timer;
-};
-
-static void on_close_free(uv_handle_t *handle)
-{
-    free(handle);
-}
-
-static void close_data(struct client_request_data *data)
-{
-    if (!data) return;
-    if (data->client)
-        uv_close((uv_handle_t *)data->client, on_close_free);
-    if (data->work_req)
-        free(data->work_req);
-    if (data->write_req)
-        free(data->write_req);
-    if (data->timer)
-        uv_close((uv_handle_t *)data->timer, on_close_free);
-    if (data->text)
-        free(data->text);
-    if (data->response)
-        free(data->response);
-    free(data);
-}
-
-
-
-#cgo darwin LDFLAGS: -luv
-#cgo linux LDFLAGS: -ldl -luv -lpthread -lrt -lm
-#cgo windows LDFLAGS: -luv.dll -lws2_32 -lws2_32 -lpsapi -liphlpapi
+#include "common.h"
 */
 import "C"
 import (
@@ -306,7 +143,7 @@ type Request struct {
 type Handle struct {
 	h    *C.uv_handle_t
 	Data interface{}
-	ptr  interface{}
+	Ptr  interface{}
 }
 
 type callbackInfo struct {
@@ -533,21 +370,6 @@ func SetBuf(bufs *C.uv_buf_t, index uint, buf C.uv_buf_t) {
 	C.uv_buf_set(bufs, C.uint(index), buf)
 }
 
-// func uv_tcp_getsockname(tcp *C.uv_tcp_t, sa *C.struct_sockaddr) C.int {
-// 	l := C.UV_SIZEOF_SOCKADDR_IN
-// 	return C.uv_tcp_getsockname(tcp, sa, (*C.int)(unsafe.Pointer(&l)))
-// }
-
-// func uv_tcp_getpeername(tcp *C.uv_tcp_t, sa *C.struct_sockaddr) C.int {
-// 	l := C.UV_SIZEOF_SOCKADDR_IN
-// 	return C.uv_tcp_getpeername(tcp, sa, (*C.int)(unsafe.Pointer(&l)))
-// }
-
-// func uv_udp_getsockname(udp *C.uv_udp_t, sa *C.struct_sockaddr) C.int {
-// 	l := C.UV_SIZEOF_SOCKADDR_IN
-// 	return C.uv_udp_getsockname(udp, sa, (*C.int)(unsafe.Pointer(&l)))
-// }
-
 func uv_timer_start(timer *C.uv_timer_t, timeout uint64, repeat uint64) C.int {
 	return C._uv_timer_start(timer, C.uint64_t(timeout), C.uint64_t(repeat))
 }
@@ -584,6 +406,45 @@ func uv_spawn(loop *C.uv_loop_t, process *C.uv_process_t, options *C.uv_process_
 	return C._uv_spawn(loop, process, options)
 }
 
+// connect_socket initiate a connection on a socket.
+// See also: https://linux.die.net/man/2/connect
+func connect_socket(sock C.uv_os_sock_t, addr SockaddrIn) C.int {
+
+	return C.connect_socket(sock, addr.GetSockAddr())
+}
+
+// close_socket return non zero if error occurs.
+// Calling closesocket() on Window and close() on non-Window.
+// See also: https://linux.die.net/man/2/close
+func close_socket(sock C.uv_os_sock_t) C.int {
+	return C.close_socket(sock)
+}
+
+// create_tcp_socket create socket with addr.
+func create_tcp_socket(addr SockaddrIn, isBoundSocket int) C.uv_os_sock_t {
+	return C.create_tcp_socket(addr.GetSockAddrIn(), C.int(isBoundSocket))
+}
+
+// test_sendAndRecv do test with send and recv over sock
+func test_sendAndRecv(sock C.uv_os_sock_t) {
+	defer func() {
+		if e := recover(); e != nil {
+		}
+	}()
+	C.test_sendAndRecv(sock)
+}
+
+func test_OpenFile(path string) C.int {
+	p := C.CString(path)
+	defer C.free(unsafe.Pointer(p))
+
+	return C.test_Open(p)
+}
+
+/*
+*			---------------------- EXPORT FUCTIONS ----------------------
+ */
+
 //export __uv_connect_cb
 func __uv_connect_cb(c *C.uv_connect_t, status C.int) {
 	if cbi := (*callbackInfo)(c.handle.data); cbi.connect_cb != nil {
@@ -614,10 +475,10 @@ func __uv_read_cb(s *C.uv_stream_t, nread C.ssize_t, buf *C.uv_buf_t) {
 
 //export __uv_write_cb
 func __uv_write_cb(w *C.uv_write_t, status C.int) {
-	if cbi := (*callbackInfo)(w.handle.data); cbi.write_cb != nil {
+	if cbi := (*callbackInfo)(w.data); cbi.write_cb != nil {
 		cbi.write_cb(&Request{
 			(*C.uv_req_t)(unsafe.Pointer(w)),
-			&Handle{(*C.uv_handle_t)(unsafe.Pointer(w.handle)), cbi.data, cbi.ptr}}, int(status))
+			&Handle{(*C.uv_handle_t)(unsafe.Pointer(w)), cbi.data, cbi.ptr}}, int(status))
 	}
 }
 
@@ -715,3 +576,18 @@ func __uv_exit_cb(pc *C.uv_process_t, exit_status C.int, term_signal C.int) {
 		cbi.exit_cb(&Handle{(*C.uv_handle_t)(unsafe.Pointer(pc)), cbi.data, cbi.ptr}, int(exit_status), int(term_signal))
 	}
 }
+
+// func uv_tcp_getsockname(tcp *C.uv_tcp_t, sa *C.struct_sockaddr) C.int {
+// 	l := C.UV_SIZEOF_SOCKADDR_IN
+// 	return C.uv_tcp_getsockname(tcp, sa, (*C.int)(unsafe.Pointer(&l)))
+// }
+
+// func uv_tcp_getpeername(tcp *C.uv_tcp_t, sa *C.struct_sockaddr) C.int {
+// 	l := C.UV_SIZEOF_SOCKADDR_IN
+// 	return C.uv_tcp_getpeername(tcp, sa, (*C.int)(unsafe.Pointer(&l)))
+// }
+
+// func uv_udp_getsockname(udp *C.uv_udp_t, sa *C.struct_sockaddr) C.int {
+// 	l := C.UV_SIZEOF_SOCKADDR_IN
+// 	return C.uv_udp_getsockname(udp, sa, (*C.int)(unsafe.Pointer(&l)))
+// }

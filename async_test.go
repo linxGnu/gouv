@@ -11,7 +11,7 @@ func testAsync(t *testing.T, dfLoop *UvLoop) {
 		if h.Data != nil {
 			x := h.Data.(map[int]string)
 			if st, ok := x[1]; ok && st == "a" {
-				fmt.Println(h.ptr.(*UvAsync))
+				fmt.Println(h.Ptr.(*UvAsync))
 				return
 			}
 		}
@@ -21,6 +21,8 @@ func testAsync(t *testing.T, dfLoop *UvLoop) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	fmt.Println(async.GetAsyncHandle())
 
 	go func() {
 		time.Sleep(100 * time.Millisecond)

@@ -94,8 +94,13 @@ func (t *UvTCP) Connect(req *C.uv_connect_t, sockAddr SockaddrIn, cb func(*Reque
 	return uv_tcp_connect(req, t.t, sockAddr.GetSockAddr())
 }
 
+// GetTCPHandle get handle
+func (t *UvTCP) GetTCPHandle() *C.uv_tcp_t {
+	return t.t
+}
+
 func sampleTCPReadHandling(h *Handle, buf *C.uv_buf_t, nRead C.ssize_t) {
-	conn := h.ptr.(*UvTCP)
+	conn := h.Ptr.(*UvTCP)
 
 	st := C.testReadTCP(conn.s, nRead, buf)
 	fmt.Println("Read from client: ", C.GoString(st))
@@ -104,7 +109,7 @@ func sampleTCPReadHandling(h *Handle, buf *C.uv_buf_t, nRead C.ssize_t) {
 	SetBuf(bufs, 0, BufInit2(st, C.uint(C.strlen(st)+1)))
 
 	conn.Write(NewUvWrite(nil).w, bufs, 1, func(h *Request, status int) {
-		fmt.Println(h, status)
+		fmt.Println("Write done: ", h.Handle.Ptr.(*UvTCP), status)
 	})
 }
 

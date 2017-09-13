@@ -37,19 +37,24 @@ func UvCheckInit(loop *UvLoop, data interface{}) (*UvCheck, error) {
 }
 
 // Start (uv_prepare_start) start the timer. timeout and repeat are in milliseconds.
-func (t *UvCheck) Start(cb func(*Handle)) C.int {
-	cbi := (*callbackInfo)(t.c.data)
+func (c *UvCheck) Start(cb func(*Handle)) C.int {
+	cbi := (*callbackInfo)(c.c.data)
 	cbi.check_cb = cb
 
-	return uv_check_start(t.c)
+	return uv_check_start(c.c)
 }
 
 // Stop (uv_prepare_stop) the timer, the callback will not be called anymore.
-func (t *UvCheck) Stop() C.int {
-	return C.uv_check_stop(t.c)
+func (c *UvCheck) Stop() C.int {
+	return C.uv_check_stop(c.c)
 }
 
 // Freemem freemem of prepare
-func (t *UvCheck) Freemem() {
-	C.free(unsafe.Pointer(t.c))
+func (c *UvCheck) Freemem() {
+	C.free(unsafe.Pointer(c.c))
+}
+
+// GetAsyncHandle get handle
+func (c *UvCheck) GetCheckHandle() *C.uv_check_t {
+	return c.c
 }

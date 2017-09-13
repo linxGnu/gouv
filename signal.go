@@ -56,3 +56,8 @@ func (s *UvSignal) StartOneShot(cb func(*Handle, C.int), sigNum int) C.int {
 func (s *UvSignal) Stop() C.int {
 	return C.uv_signal_stop(s.s)
 }
+
+// GetSignalHandle get handle
+func (s *UvSignal) GetSignalHandle() *C.uv_signal_t {
+	return s.s
+}

@@ -37,19 +37,24 @@ func UvPrepareInit(loop *UvLoop, data interface{}) (*UvPrepare, error) {
 }
 
 // Start (uv_prepare_start) start the timer. timeout and repeat are in milliseconds.
-func (t *UvPrepare) Start(cb func(*Handle)) C.int {
-	cbi := (*callbackInfo)(t.p.data)
+func (p *UvPrepare) Start(cb func(*Handle)) C.int {
+	cbi := (*callbackInfo)(p.p.data)
 	cbi.prepare_cb = cb
 
-	return uv_prepare_start(t.p)
+	return uv_prepare_start(p.p)
 }
 
 // Stop (uv_prepare_stop) the timer, the callback will not be called anymore.
-func (t *UvPrepare) Stop() C.int {
-	return C.uv_prepare_stop(t.p)
+func (p *UvPrepare) Stop() C.int {
+	return C.uv_prepare_stop(p.p)
 }
 
 // Freemem freemem of prepare
-func (t *UvPrepare) Freemem() {
-	C.free(unsafe.Pointer(t.p))
+func (p *UvPrepare) Freemem() {
+	C.free(unsafe.Pointer(p.p))
+}
+
+// GetPrepareHandle get handle
+func (p *UvPrepare) GetPrepareHandle() *C.uv_prepare_t {
+	return p.p
 }

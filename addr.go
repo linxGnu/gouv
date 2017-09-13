@@ -22,6 +22,7 @@ type SockaddrIn interface {
 	Name() ([]byte, error)
 	Freemem()
 	GetSockAddr() *C.struct_sockaddr
+	GetSockAddrIn() *C.struct_sockaddr_in
 }
 
 // Sockaddr general sock address
@@ -85,6 +86,11 @@ func (sa *SockaddrIn4) GetSockAddr() *C.struct_sockaddr {
 	return (*C.struct_sockaddr)(unsafe.Pointer(sa.sa))
 }
 
+// GetSockAddr get general pointer to addr
+func (sa *SockaddrIn4) GetSockAddrIn() *C.struct_sockaddr_in {
+	return (*C.struct_sockaddr_in)(unsafe.Pointer(sa.sa))
+}
+
 // Name name of sock addr
 func (sa *SockaddrIn6) Name() (name []byte, err error) {
 	b := make([]byte, 256)
@@ -103,4 +109,9 @@ func (sa *SockaddrIn6) Freemem() {
 // GetSockAddr get general pointer to addr
 func (sa *SockaddrIn6) GetSockAddr() *C.struct_sockaddr {
 	return (*C.struct_sockaddr)(unsafe.Pointer(sa.sa))
+}
+
+// GetSockAddr get general pointer to addr
+func (sa *SockaddrIn6) GetSockAddrIn() *C.struct_sockaddr_in {
+	return (*C.struct_sockaddr_in)(unsafe.Pointer(sa.sa))
 }

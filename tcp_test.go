@@ -2,8 +2,13 @@ package gouv
 
 import (
 	"fmt"
+	"os"
 	"testing"
 	"time"
+)
+
+const (
+	testServerPort = 9999
 )
 
 func initServer(t *testing.T, loop *UvLoop, flag *uint, port uint16) (connection *UvTCP) {
@@ -63,12 +68,49 @@ func initServer(t *testing.T, loop *UvLoop, flag *uint, port uint16) (connection
 }
 
 func testTCP(t *testing.T, dfLoop *UvLoop) {
-	// defer os.Remove("/tmp/stderr.txt")
-	// defer os.Remove("/tmp/stdout.txt")
+	defer func() {
+		if e := recover(); e != nil {
+			fmt.Println(e)
+		}
+	}()
 
-	connection := initServer(t, dfLoop, nil, 9999)
+	defer os.Remove("/tmp/stderr.txt")
+	defer os.Remove("/tmp/stdout.txt")
 
-	clientProcess, err := UvSpawnProcess(dfLoop, &UvProcessOptions{
+	server := initServer(t, dfLoop, nil, testServerPort)
+
+	go runPythonClient(t, dfLoop)
+
+	go runSockClient(t, dfLoop)
+
+	go func() {
+		time.Sleep(10 * time.Second)
+
+		// try to close connection first
+		shutDown := NewUvShutdown(nil)
+		if r := server.Shutdown(shutDown.s, func(h *Request, status int) {
+			fmt.Println("Shutting down tcp server", h, status)
+		}); r != 0 {
+			t.Fatal(ParseUvErr(r))
+		} else {
+			fmt.Println("Shutting down tcp server")
+		}
+
+		// stop read
+		if r := server.ReadStop(); r != 0 {
+			t.Fatal(ParseUvErr(r))
+		}
+	}()
+}
+
+func runPythonClient(t *testing.T, dfLoop *UvLoop) {
+	defer func() {
+		if e := recover(); e != nil {
+			fmt.Println(e)
+		}
+	}()
+
+	pythonClient, err := UvSpawnProcess(dfLoop, &UvProcessOptions{
 		Args:  []string{"python", "test_pkg/test_tcp_client.py"},
 		Cwd:   "./",
 		Flags: UV_PROCESS_DETACHED,
@@ -76,7 +118,7 @@ func testTCP(t *testing.T, dfLoop *UvLoop) {
 		Env:   []string{"PATH"},
 		ExitCb: func(h *Handle, status, sigNum int) {
 			fmt.Printf("Process client tcp server exited with status %d and signal %d\n", status, sigNum)
-			fmt.Printf("%p\n", h.ptr.(*UvProcess))
+			fmt.Printf("%p\n", h.Ptr.(*UvProcess))
 		},
 	}, nil)
 	if err != nil {
@@ -86,25 +128,67 @@ func testTCP(t *testing.T, dfLoop *UvLoop) {
 	go func() {
 		time.Sleep(5 * time.Second)
 
-		// try to close connection first
-		shutDown := NewUvShutdown(nil)
-		if r := connection.Shutdown(shutDown.s, func(h *Request, status int) {
-			fmt.Println("Shutting down tcp server", h, status)
-		}); r != 0 {
-			t.Fatal(ParseUvErr(r))
-		} else {
-			fmt.Println("Shutting down tcp server")
-		}
-
-		// stop read
-		if r := connection.ReadStop(); r != 0 {
-			t.Fatal(ParseUvErr(r))
-		}
-
 		// Unref this process
-		clientProcess.Unref()
+		pythonClient.Unref()
 
 		// Try to kill this proces
-		clientProcess.Kill(9)
+		pythonClient.Kill(9)
 	}()
+}
+
+func runSockClient(t *testing.T, dfLoop *UvLoop) {
+	defer func() {
+		if e := recover(); e != nil {
+			fmt.Println(e)
+		}
+	}()
+
+	//
+	time.Sleep(1 * time.Second)
+
+	addr, err := IPv4Addr("0.0.0.0", 10987)
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+
+	serverAddr, err := IPv4Addr("127.0.0.1", testServerPort)
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+
+	//
+	sock := create_tcp_socket(addr, 0)
+
+	// connect socket first
+	if r := connect_socket(sock, serverAddr); r != 0 {
+		t.Fatal(ParseUvErr(r))
+	}
+
+	//
+	poller, err := UvPollInitSocket(dfLoop, sock, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	fmt.Println("Poller sock:", poller.GetPollHandle())
+
+	if r := poller.Start(int(UV_READABLE), func(h *Handle, status int, events int) {
+		fmt.Println("Poll start callbacked!!!!!", status, events)
+	}); r != 0 {
+		t.Fatal(ParseUvErr(r))
+	}
+
+	// now try to send and recv
+	test_sendAndRecv(sock)
+
+	// Close socket
+	if r := close_socket(sock); r != 0 {
+		t.Fatal(ParseUvErr(r))
+	}
+
+	// Stop poller
+	if r := poller.Stop(); r != 0 {
+		t.Fatal(ParseUvErr(r))
+	}
 }

@@ -104,6 +104,7 @@ func (s *UvStream) ReadStop() C.int {
 func (s *UvStream) Write(req *C.uv_write_t, buf *C.uv_buf_t, bufcnt int, cb func(*Request, int)) C.int {
 	cbi := (*callbackInfo)(req.data)
 	cbi.write_cb = cb
+	cbi.ptr = s.Ptr
 
 	return uv_write(req, s.s, buf, bufcnt)
 }
@@ -141,4 +142,9 @@ func (s *UvStream) SetBlocking(blocking int) C.int {
 // Freemem freemem of base stream
 func (s *UvStream) Freemem() {
 	C.free(unsafe.Pointer(s.s))
+}
+
+// GetStreamHandle get handle
+func (s *UvStream) GetStreamHandle() *C.uv_stream_t {
+	return s.s
 }

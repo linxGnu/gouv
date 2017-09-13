@@ -172,6 +172,11 @@ func (p *UvProcess) Unref() {
 	uv_unref((*C.uv_handle_t)(unsafe.Pointer(p.p)))
 }
 
+// GetProcessHandle get handle
+func (p *UvProcess) GetProcessHandle() *C.uv_process_t {
+	return p.p
+}
+
 // UvKill (uv_kill) sends the specified signal to the given PID. Check the documentation on uv_signal_t — Signal handle for signal support, specially on Windows.
 func UvKill(pid int, sigNum C.int) C.int {
 	return C.uv_kill(C.int(pid), sigNum)

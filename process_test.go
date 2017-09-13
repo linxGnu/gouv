@@ -55,7 +55,7 @@ func testKillProcess(t *testing.T, dfLoop *UvLoop) {
 		Env:   []string{"PATH"},
 		ExitCb: func(h *Handle, status, sigNum int) {
 			fmt.Printf("Process exited with status %d and signal %d\n", status, sigNum)
-			fmt.Printf("%p\n", h.ptr.(*UvProcess))
+			fmt.Printf("%p\n", h.Ptr.(*UvProcess))
 		},
 	}, nil)
 	if err != nil {

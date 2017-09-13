@@ -78,5 +78,10 @@ func (p *UvPipe) PendingType() C.uv_handle_type {
 	return C.uv_pipe_pending_type(p.p)
 }
 
+// GetPipeHandle get handle
+func (p *UvPipe) GetPipeHandle() *C.uv_pipe_t {
+	return p.p
+}
+
 // TODO: uv_pipe_getsockname
 // TODO: uv_pipe_getpeername

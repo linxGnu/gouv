@@ -48,6 +48,13 @@ func TestAll(t *testing.T) {
 		t.Fatal(ParseUvErr(r))
 	}
 
+	// setup poller
+	poller, err := UvPollInit(nil, int(test_OpenFile("test_pkg/tcp_client_sock.c")), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	fmt.Println("Poller file:", poller.GetPollHandle())
+
 	//
 	testAsync(t, nil)
 
@@ -62,6 +69,16 @@ func TestAll(t *testing.T) {
 
 	//
 	testTCP(t, nil)
+
+	//
+	if r := poller.Start(int(UV_READABLE), func(h *Handle, status int, events int) {
+		fmt.Println("Poll start callbacked!!!!!", status, events)
+	}); r != 0 {
+		t.Fatal(ParseUvErr(r))
+	}
+	if r := poller.Stop(); r != 0 {
+		t.Fatal(ParseUvErr(r))
+	}
 
 	go loop.Run(UV_RUN_DEFAULT)
 
@@ -80,6 +97,11 @@ func TestAll(t *testing.T) {
 }
 
 func testIdlePrepareCheckerTimer(t *testing.T, dfLoop *UvLoop) {
+	go func() {
+		if e := recover(); e != nil {
+		}
+	}()
+
 	timer1, err := TimerInit(dfLoop, map[int]string{1: "t1"})
 	if err != nil {
 		t.Fatal(err)
@@ -147,6 +169,11 @@ func testIdlePrepareCheckerTimer(t *testing.T, dfLoop *UvLoop) {
 	}, 1000, 1500)
 
 	go func() {
+		go func() {
+			if e := recover(); e != nil {
+			}
+		}()
+
 		time.Sleep(2 * time.Second)
 		timer1.Again()
 		timer1.SetRepeat(1600)
@@ -156,6 +183,11 @@ func testIdlePrepareCheckerTimer(t *testing.T, dfLoop *UvLoop) {
 	}()
 
 	go func() {
+		go func() {
+			if e := recover(); e != nil {
+			}
+		}()
+
 		time.Sleep(3 * time.Second)
 
 		fmt.Println(timer2.GetRepeat())
@@ -174,6 +206,11 @@ func testIdlePrepareCheckerTimer(t *testing.T, dfLoop *UvLoop) {
 	}()
 
 	go func() {
+		go func() {
+			if e := recover(); e != nil {
+			}
+		}()
+
 		time.Sleep(8 * time.Second)
 
 		fmt.Println(timer1.GetRepeat())

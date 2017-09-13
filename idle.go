@@ -37,19 +37,24 @@ func UvIdleInit(loop *UvLoop, data interface{}) (*UvIdle, error) {
 }
 
 // Start (uv_prepare_start) start the timer. timeout and repeat are in milliseconds.
-func (t *UvIdle) Start(cb func(*Handle, int)) C.int {
-	cbi := (*callbackInfo)(t.i.data)
+func (idle *UvIdle) Start(cb func(*Handle, int)) C.int {
+	cbi := (*callbackInfo)(idle.i.data)
 	cbi.idle_cb = cb
 
-	return uv_idle_start(t.i)
+	return uv_idle_start(idle.i)
 }
 
 // Stop (uv_idle_stop) the timer, the callback will not be called anymore.
-func (t *UvIdle) Stop() C.int {
-	return C.uv_idle_stop(t.i)
+func (idle *UvIdle) Stop() C.int {
+	return C.uv_idle_stop(idle.i)
 }
 
 // Freemem freemem of prepare
-func (t *UvIdle) Freemem() {
-	C.free(unsafe.Pointer(t.i))
+func (idle *UvIdle) Freemem() {
+	C.free(unsafe.Pointer(idle.i))
+}
+
+// GetIdleHandle get handle
+func (idle *UvIdle) GetIdleHandle() *C.uv_idle_t {
+	return idle.i
 }

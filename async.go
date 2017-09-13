@@ -37,6 +37,11 @@ func UvAsyncInit(loop *UvLoop, data interface{}, cb func(*Handle)) (*UvAsync, er
 }
 
 // Send (uv_async_send) wake up the event loop and call the async handle’s callback.
-func (t *UvAsync) Send() C.int {
-	return C.uv_async_send(t.a)
+func (a *UvAsync) Send() C.int {
+	return C.uv_async_send(a.a)
+}
+
+// GetAsyncHandle get handle
+func (a *UvAsync) GetAsyncHandle() *C.uv_async_t {
+	return a.a
 }
