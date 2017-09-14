@@ -9,8 +9,6 @@ import (
 
 func TestPipe(t *testing.T) {
 	doTest(t, testPipe, 5)
-
-	doTestWithLoop(t, testPipe, nil, 5)
 }
 
 func testPipe(t *testing.T, dfLoop *UvLoop) {

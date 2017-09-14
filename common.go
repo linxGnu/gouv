@@ -133,6 +133,20 @@ const (
 	UV_PROCESS_WINDOWS_HIDE UV_PROCESS_FLAGS = (1 << 4)
 )
 
+// UV_TTY_MODE TTY mode type
+type UV_TTY_MODE int
+
+const (
+	/* UV_TTY_MODE_NORMAL initial/normal terminal mode */
+	UV_TTY_MODE_NORMAL UV_TTY_MODE = 0
+
+	// UV_TTY_MODE_RAW raw input mode (On Windows, ENABLE_WINDOW_INPUT is also enabled)
+	UV_TTY_MODE_RAW UV_TTY_MODE = 1
+
+	// UV_TTY_MODE_IO binary-safe I/O mode for IPC (Unix-only)
+	UV_TTY_MODE_IO UV_TTY_MODE = 2
+)
+
 // Request (uv_req_t) is the base type for all libuv request types.
 type Request struct {
 	r      *C.uv_req_t

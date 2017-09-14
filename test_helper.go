@@ -12,6 +12,14 @@ char* testRead(uv_stream_t *client, ssize_t nread, uv_buf_t* buf) {
 
 	return tmp;
 }
+
+void write_to_tty_test(uv_stream_t* tty, char* s) {
+  uv_buf_t buf;
+  uv_write_t req;
+  buf.base = s;
+  buf.len = strlen(buf.base);
+  uv_write(&req, tty, &buf, 1, NULL);
+}
 */
 import "C"
 
@@ -80,4 +88,16 @@ func samplePipeReadOfClient(conn *UvPipe) {
 		st := C.testRead(conn.s, nRead, buf)
 		fmt.Println("Read from pipe server ______ :", C.GoString(st))
 	})
+}
+
+func sampleTTY(tty *UvTTY) {
+	tty.ReadStart(func(h *Handle, buf *C.uv_buf_t, nRead C.ssize_t) {
+		st := C.testRead(tty.s, nRead, buf)
+		fmt.Println("TTY read:", C.GoString(st))
+	})
+
+	tst := C.CString("Writing to console!\n")
+	defer C.free(unsafe.Pointer(tst))
+
+	C.write_to_tty_test(tty.s, tst)
 }

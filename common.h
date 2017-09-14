@@ -56,6 +56,13 @@ typedef struct connection_context_s
     unsigned int events, delayed_events;
 } connection_context_t;
 
+typedef struct window_size_s
+{
+    int err;
+    int width;
+    int height;
+} window_size_t;
+
 static void _uv_alloc_cb(uv_handle_t *handle, size_t suggested_size, uv_buf_t *buf)
 {
     char *base;
