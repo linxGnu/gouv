@@ -32,6 +32,11 @@ void set_data_in_StdioContainer(uv_stdio_container_t* container, int i, uv_stdio
 	container[i].data.stream = stream;
 	container[i].data.fd = fd;
 }
+
+void set_data_in_StdioContainer_FlagOnly(uv_stdio_container_t* container, int i, uv_stdio_flags flags) {
+	container[i].flags = flags;
+	container[i].data.stream = NULL;
+}
 */
 import "C"
 import (
@@ -51,7 +56,7 @@ func (c *UvStdioContainerData) Freemem() {
 
 // UvStdioContainer container for each stdio handle or fd passed to a child process.
 type UvStdioContainer struct {
-	Flags C.uv_stdio_flags
+	Flags C.int
 	Data  *UvStdioContainerData
 }
 
@@ -163,7 +168,11 @@ func UvSpawnProcess(loop *UvLoop, options *UvProcessOptions, data interface{}) (
 		opt.stdio_count = C.int(len(options.Stdio))
 		opt.stdio = C.mallocStdioContainerArrT(opt.stdio_count)
 		for i, v := range options.Stdio {
-			C.set_data_in_StdioContainer(opt.stdio, C.int(i), v.Flags, v.Data.Stream, C.int(v.Data.Fd))
+			if v.Data != nil {
+				C.set_data_in_StdioContainer(opt.stdio, C.int(i), C.uv_stdio_flags(v.Flags), v.Data.Stream, C.int(v.Data.Fd))
+			} else {
+				C.set_data_in_StdioContainer_FlagOnly(opt.stdio, C.int(i), C.uv_stdio_flags(v.Flags))
+			}
 		}
 		defer C.free(unsafe.Pointer(opt.stdio))
 	}

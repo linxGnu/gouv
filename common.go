@@ -6,6 +6,7 @@ package gouv
 */
 import "C"
 import (
+	"fmt"
 	"unsafe"
 )
 
@@ -205,6 +206,7 @@ type callbackInfo struct {
 	check_cb      func(*Handle)
 	shutdown_cb   func(*Request, int)
 	fs_event_cb   func(*Handle, *C.char, int, int)
+	fs_poll_cb    func(*Handle, C.int, *C.uv_stat_t, *C.uv_stat_t)
 	timer_cb      func(*Handle, int)
 	signal_cb     func(*Handle, int)
 	idle_cb       func(*Handle, int)
@@ -362,6 +364,11 @@ func uv_try_write(stream *C.uv_stream_t, buf *C.uv_buf_t, bufcnt int) C.int {
 // uv_fs_event_start (uv_fs_event_start) start the handle with the given callback, which will watch the specified path for changes. flags can be an ORed mask of uv_fs_event_flags.
 func uv_fs_event_start(h *C.uv_fs_event_t, path *C.char, flags uint) C.int {
 	return C._uv_fs_event_start(h, path, C.uint(flags))
+}
+
+// uv_fs_poll_start (uv_fs_poll_start) check the file at path for changes every interval milliseconds.
+func uv_fs_poll_start(h *C.uv_fs_poll_t, path *C.char, interval uint) C.int {
+	return C._uv_fs_poll_start(h, path, C.uint(interval))
 }
 
 // uv_is_readable (uv_is_readable) returns if the stream is readable.
@@ -612,5 +619,13 @@ func __uv_exit_cb(pc *C.uv_process_t, exit_status C.int, term_signal C.int) {
 func __uv_fs_event_cb(h *C.uv_fs_event_t, filename *C.char, events, status C.int) {
 	if cbi := (*callbackInfo)(h.data); cbi.fs_event_cb != nil {
 		cbi.fs_event_cb(&Handle{(*C.uv_handle_t)(unsafe.Pointer(h)), cbi.data, cbi.ptr}, filename, int(events), int(status))
+	}
+}
+
+//export __uv_fs_poll_cb
+func __uv_fs_poll_cb(h *C.uv_fs_poll_t, status C.int, prev *C.uv_stat_t, curr *C.uv_stat_t) {
+	fmt.Println("hasdfads")
+	if cbi := (*callbackInfo)(h.data); cbi.fs_poll_cb != nil {
+		cbi.fs_poll_cb(&Handle{(*C.uv_handle_t)(unsafe.Pointer(h)), cbi.data, cbi.ptr}, status, prev, curr)
 	}
 }

@@ -11,34 +11,34 @@ func TestIdlePrepareCheckerTimer(t *testing.T) {
 	doTest(t, testIdlePrepareCheckerTimer, 20)
 }
 
-func testIdlePrepareCheckerTimer(t *testing.T, dfLoop *UvLoop) {
+func testIdlePrepareCheckerTimer(t *testing.T, loop *UvLoop) {
 	defer func() {
 		if e := recover(); e != nil {
 			fmt.Println(e)
 		}
 	}()
 
-	timer1, err := TimerInit(dfLoop, map[int]string{1: "t1"})
+	timer1, err := TimerInit(loop, map[int]string{1: "t1"})
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	timer2, err := TimerInit(dfLoop, map[int]string{2: "t2"})
+	timer2, err := TimerInit(loop, map[int]string{2: "t2"})
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	prepare, err := UvPrepareInit(dfLoop, map[int]string{3: "p"})
+	prepare, err := UvPrepareInit(loop, map[int]string{3: "p"})
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	checker, err := UvCheckInit(dfLoop, map[int]string{4: "c"})
+	checker, err := UvCheckInit(loop, map[int]string{4: "c"})
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	idle, err := UvIdleInit(dfLoop, map[int]string{5: "i"})
+	idle, err := UvIdleInit(loop, map[int]string{5: "i"})
 	if err != nil {
 		t.Fatal(err)
 	}

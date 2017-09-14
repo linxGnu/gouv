@@ -8,24 +8,12 @@ import (
 )
 
 func TestSpawnChildProcess(t *testing.T) {
-	doTest(t, testSpawnChildProcess, 1)
+	doTest(t, testSpawnChildProcess, 2)
 }
 
-func testSpawnChildProcess(t *testing.T, dfLoop *UvLoop) {
+func testSpawnChildProcess(t *testing.T, loop *UvLoop) {
 	// spawn new process
-	process, err := UvSpawnProcess(dfLoop, &UvProcessOptions{
-		Args:  []string{"ls", "-lah"},
-		Cwd:   "/tmp",
-		Flags: UV_PROCESS_DETACHED,
-		File:  "ls",
-		ExitCb: func(h *Handle, status, sigNum int) {
-			if status != 0 {
-				t.Fatalf("Failed spawn child process")
-			}
-
-			fmt.Printf("Process exited with status %d and signal %d\n", status, sigNum)
-		},
-	}, nil)
+	process, err := sampleProcessInit(loop)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -52,9 +40,9 @@ func fileExists(name string) bool {
 	return true
 }
 
-func testKillProcess(t *testing.T, dfLoop *UvLoop) {
+func testKillProcess(t *testing.T, loop *UvLoop) {
 	// spawn new process
-	process, err := UvSpawnProcess(dfLoop, &UvProcessOptions{
+	process, err := UvSpawnProcess(loop, &UvProcessOptions{
 		Args:  []string{"sleep", "10000"},
 		Cwd:   "/tmp",
 		Flags: UV_PROCESS_DETACHED,

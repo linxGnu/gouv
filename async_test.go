@@ -12,8 +12,8 @@ func TestAsync(t *testing.T) {
 	doTestWithLoop(t, test_async, nil, 2)
 }
 
-func test_async(t *testing.T, dfLoop *UvLoop) {
-	async, err := UvAsyncInit(dfLoop, map[int]string{1: "a"}, func(h *Handle) {
+func test_async(t *testing.T, loop *UvLoop) {
+	async, err := UvAsyncInit(loop, map[int]string{1: "a"}, func(h *Handle) {
 		if h.Data != nil {
 			x := h.Data.(map[int]string)
 			if st, ok := x[1]; ok && st == "a" {

@@ -13,8 +13,8 @@ func TestPipe(t *testing.T) {
 	// doTestWithLoop(t, testPipe, nil, 5)
 }
 
-func testPipe(t *testing.T, dfLoop *UvLoop) {
-	pServer, err := UvPipeInit(dfLoop, 0, nil)
+func testPipe(t *testing.T, loop *UvLoop) {
+	pServer, err := UvPipeInit(loop, 0, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -29,7 +29,7 @@ func testPipe(t *testing.T, dfLoop *UvLoop) {
 		server := h.Ptr.(*UvPipe)
 		fmt.Println("Pipe server got connection", server, status)
 
-		client, _ := UvPipeInit(dfLoop, 0, nil)
+		client, _ := UvPipeInit(loop, 0, nil)
 		if r := server.ServerAccept(client.GetStreamHandle()); r != 0 {
 			t.Fatal(ParseUvErr(r))
 		}
@@ -51,7 +51,7 @@ func testPipe(t *testing.T, dfLoop *UvLoop) {
 
 		time.Sleep(2 * time.Second)
 
-		pClient, _ := UvPipeInit(dfLoop, 0, nil)
+		pClient, _ := UvPipeInit(loop, 0, nil)
 		pClient.Connect(NewUvConnect(nil), "echo.sock", func(r *Request, status int) {
 			fmt.Println("Connected to pipe server with status: ", status)
 		})

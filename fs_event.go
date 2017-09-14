@@ -93,5 +93,5 @@ func (f *UvFSEvent) GetPath() (C.int, *C.char, C.size_t) {
 
 // Freemem freemem handle
 func (f *UvFSEvent) Freemem() {
-	defer C.free(unsafe.Pointer(f.f))
+	C.free(unsafe.Pointer(f.f))
 }
