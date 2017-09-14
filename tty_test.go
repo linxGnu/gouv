@@ -3,7 +3,6 @@ package gouv
 import (
 	"fmt"
 	"testing"
-	"time"
 )
 
 func TestTTY(t *testing.T) {
@@ -25,16 +24,16 @@ func testTTY(t *testing.T, loop *UvLoop) {
 
 		fmt.Println(tty.GetWinsize())
 
-		if r := tty.SetMode(UV_TTY_MODE_NORMAL); r != 0 {
-			t.Fatal(ParseUvErr(r))
-		}
+		// if r := tty.SetMode(UV_TTY_MODE_NORMAL); r != 0 {
+		// 	t.Fatal(ParseUvErr(r))
+		// }
 
-		sampleTTY(tty)
+		// sampleTTY(tty)
 
-		time.Sleep(2 * time.Second)
+		// time.Sleep(2 * time.Second)
 
-		tty.ResetMode()
+		// tty.ResetMode()
 
-		tty.Freemem()
+		// tty.Freemem()
 	}()
 }

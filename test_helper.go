@@ -93,17 +93,17 @@ func samplePipeReadOfClient(conn *UvPipe) {
 	})
 }
 
-func sampleTTY(tty *UvTTY) {
-	tty.ReadStart(func(h *Handle, buf *C.uv_buf_t, nRead C.ssize_t) {
-		st := C.testRead(tty.s, nRead, buf)
-		fmt.Println("TTY read:", C.GoString(st))
-	})
+// func sampleTTY(tty *UvTTY) {
+// 	tty.ReadStart(func(h *Handle, buf *C.uv_buf_t, nRead C.ssize_t) {
+// 		st := C.testRead(tty.s, nRead, buf)
+// 		fmt.Println("TTY read:", C.GoString(st))
+// 	})
 
-	tst := C.CString("Writing to console!\n")
-	defer C.free(unsafe.Pointer(tst))
+// 	tst := C.CString("Writing to console!\n")
+// 	defer C.free(unsafe.Pointer(tst))
 
-	C.write_to_tty_test(tty.s, tst)
-}
+// 	C.write_to_tty_test(tty.s, tst)
+// }
 
 func sampleFSEvent(ev *UvFSEvent, filePath string) {
 	ev.Start(func(h *Handle, path *C.char, events, status int) {
