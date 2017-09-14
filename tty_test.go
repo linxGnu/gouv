@@ -17,9 +17,9 @@ func testTTY(t *testing.T, loop *UvLoop) {
 			t.Fatal(err)
 		}
 
-		if r := tty.SetMode(UV_TTY_MODE_NORMAL); r != 0 {
-			t.Fatal(ParseUvErr(r))
-		}
+		// if r := tty.SetMode(UV_TTY_MODE_NORMAL); r != 0 {
+		// 	t.Fatal(ParseUvErr(r))
+		// }
 
 		sampleTTY(tty)
 
@@ -27,8 +27,8 @@ func testTTY(t *testing.T, loop *UvLoop) {
 
 		time.Sleep(2 * time.Second)
 
-		tty.ResetMode()
+		// tty.ResetMode()
 
-		tty.Freemem()
+		// tty.Freemem()
 	}()
 }
