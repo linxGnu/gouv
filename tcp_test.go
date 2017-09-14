@@ -107,47 +107,6 @@ func testTCP(t *testing.T, loop *UvLoop) {
 	}()
 }
 
-func TestTCP2(t *testing.T) {
-	doTestWithLoop(t, testTCP2, nil, 10)
-}
-
-func testTCP2(t *testing.T, loop *UvLoop) {
-	defer func() {
-		if e := recover(); e != nil {
-			fmt.Println(e)
-		}
-	}()
-
-	defer os.Remove("/tmp/stderr.txt")
-	defer os.Remove("/tmp/stdout.txt")
-
-	var flags uint = 0
-	server := initServer(t, loop, &flags, 10000)
-
-	go runPythonClient(t, loop)
-
-	go runUvTcpClient(t, loop, 10000)
-
-	go func() {
-		time.Sleep(6 * time.Second)
-
-		// try to close connection first
-		shutDown := NewUvShutdown(nil)
-		if r := server.Shutdown(shutDown.s, func(h *Request, status int) {
-			fmt.Println("Shutting down tcp server", h, status)
-		}); r != 0 {
-			t.Fatal(ParseUvErr(r))
-		} else {
-			fmt.Println("Shutting down tcp server")
-		}
-
-		// stop read
-		if r := server.ReadStop(); r != 0 {
-			t.Fatal(ParseUvErr(r))
-		}
-	}()
-}
-
 func runPythonClient(t *testing.T, loop *UvLoop) {
 	defer func() {
 		if e := recover(); e != nil {
