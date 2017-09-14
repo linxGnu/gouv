@@ -2,13 +2,12 @@ language: go
 
 go:
 - 1.8
-- 1.9
 
-sudo: enabled
-
-before_script:
+before_install:
 - sudo apt-get -qq update
 - sudo apt-get install -y pkg-config wget automake libtool make
+
+before_script:
 - wget https://dist.libuv.org/dist/v1.14.1/libuv-v1.14.1.tar.gz
 - tar xzf libuv-v1.14.1.tar.gz
 - cd libuv-v1.14.1
@@ -17,7 +16,7 @@ before_script:
 - make
 - sudo make install
 - sudo ldconfig
-- go get github.com/mattn/goveralls
 - cd ..
+- go get github.com/mattn/goveralls
 
 script: go test -v ./... && $HOME/gopath/bin/goveralls -service=travis-ci
