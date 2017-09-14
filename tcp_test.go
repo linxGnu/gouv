@@ -85,8 +85,6 @@ func testTCP(t *testing.T, loop *UvLoop) {
 
 	go runPythonClient(t, loop)
 
-	go runSockClient(t, loop, testServerPort)
-
 	go runUvTcpClient(t, loop, testServerPort)
 
 	go func() {
