@@ -128,8 +128,6 @@ func testTCP2(t *testing.T, loop *UvLoop) {
 
 	go runPythonClient(t, loop)
 
-	go runSockClient(t, loop, 10000)
-
 	go runUvTcpClient(t, loop, 10000)
 
 	go func() {
@@ -228,52 +226,4 @@ func runUvTcpClient(t *testing.T, loop *UvLoop, testServerPort uint16) {
 
 		tcp.ReadStop()
 	}()
-}
-
-func runSockClient(t *testing.T, loop *UvLoop, testServerPort uint16) {
-	defer func() {
-		if e := recover(); e != nil {
-			fmt.Println(e)
-		}
-	}()
-
-	serverAddr, err := IPv4Addr("127.0.0.1", testServerPort)
-	if err != nil {
-		t.Fatal(err)
-		return
-	}
-
-	//
-	sock := create_tcp_socket(serverAddr, 0)
-
-	// connect socket first
-	if r := connect_socket(sock, serverAddr); r != 0 {
-		t.Fatal(ParseUvErr(r))
-	}
-
-	//
-	poller, err := UvPollInitSocket(loop, sock, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-	fmt.Println("Poller sock:", poller.GetPollHandle())
-
-	if r := poller.Start(int(UV_READABLE|UV_WRITABLE), func(h *Handle, status int, events int) {
-		fmt.Println("Poll start callbacked!!!!!", status, events)
-	}); r != 0 {
-		t.Fatal(ParseUvErr(r))
-	}
-
-	// now try to send and recv
-	testSendAndRecv(sock)
-
-	// Close socket
-	if r := close_socket(sock); r != 0 {
-		t.Fatal(ParseUvErr(r))
-	}
-
-	// Stop poller
-	if r := poller.Stop(); r != 0 {
-		t.Fatal(ParseUvErr(r))
-	}
 }

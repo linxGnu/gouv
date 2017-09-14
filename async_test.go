@@ -7,12 +7,12 @@ import (
 )
 
 func TestAsync(t *testing.T) {
-	doTest(t, test_async, 2)
+	doTest(t, testAsync, 2)
 
-	doTestWithLoop(t, test_async, nil, 2)
+	doTestWithLoop(t, testAsync, nil, 2)
 }
 
-func test_async(t *testing.T, loop *UvLoop) {
+func testAsync(t *testing.T, loop *UvLoop) {
 	async, err := UvAsyncInit(loop, map[int]string{1: "a"}, func(h *Handle) {
 		if h.Data != nil {
 			x := h.Data.(map[int]string)

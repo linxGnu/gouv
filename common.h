@@ -43,8 +43,8 @@ extern void __uv_async_cb(uv_prepare_t *handle);
 extern void __uv_check_cb(uv_check_t *handle);
 extern void __uv_shutdown_cb(uv_shutdown_t *req, int status);
 extern void __uv_exit_cb(uv_process_t *process, int exit_status, int term_signal);
-extern void __uv_fs_event_cb(uv_fs_event_t* handle, char* filename, int events, int status);
-extern void __uv_fs_poll_cb(uv_fs_poll_t* handle, int status, uv_stat_t* prev, uv_stat_t* curr);
+extern void __uv_fs_event_cb(uv_fs_event_t *handle, char *filename, int events, int status);
+extern void __uv_fs_poll_cb(uv_fs_poll_t *handle, int status, uv_stat_t *prev, uv_stat_t *curr);
 
 typedef struct connection_context_s
 {
@@ -65,7 +65,8 @@ typedef struct window_size_s
     int height;
 } window_size_t;
 
-typedef struct char_result_s {
+typedef struct char_result_s
+{
     int err;
     char *c;
     size_t size;
@@ -194,11 +195,13 @@ static int _uv_spawn(uv_loop_t *loop, uv_process_t *process, uv_process_options_
     return uv_spawn(loop, process, options);
 }
 
-static int _uv_fs_event_start(uv_fs_event_t* handle, const char* path, unsigned int flags) {
+static int _uv_fs_event_start(uv_fs_event_t *handle, const char *path, unsigned int flags)
+{
     return uv_fs_event_start(handle, __uv_fs_event_cb, path, flags);
 }
 
-static int _uv_fs_poll_start(uv_fs_poll_t* handle, const char* path, unsigned int interval) {
+static int _uv_fs_poll_start(uv_fs_poll_t *handle, const char *path, unsigned int interval)
+{
     return uv_fs_poll_start(handle, __uv_fs_poll_cb, path, interval);
 }
 
@@ -285,7 +288,7 @@ static connection_context_t *create_connection_context(uv_os_sock_t sock, int is
     return context;
 }
 
-static void test_sendAndRecv(uv_os_sock_t sockfd)
+static void testSendAndRecv(uv_os_sock_t sockfd)
 {
     int numbytes;
     char buf[4096];
@@ -306,9 +309,4 @@ static void test_sendAndRecv(uv_os_sock_t sockfd)
     {
         printf("recv error\n");
     }
-}
-
-static int test_Open(char *path)
-{
-    return open(path, O_RDWR);
 }

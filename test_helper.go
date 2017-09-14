@@ -117,15 +117,6 @@ func sampleFSPoll(ev *UvFSPoll, filePath string) {
 	}, filePath, 2000)
 }
 
-// testSendAndRecv do test with send and recv over sock
-func testSendAndRecv(sock C.uv_os_sock_t) {
-	defer func() {
-		if e := recover(); e != nil {
-		}
-	}()
-	C.test_sendAndRecv(sock)
-}
-
 func sampleProcessInit(loop *UvLoop) (process *UvProcess, err error) {
 	// spawn new process
 	process, err = UvSpawnProcess(loop, &UvProcessOptions{
