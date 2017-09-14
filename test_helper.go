@@ -5,6 +5,7 @@ package gouv
 #include <uv.h>
 #include "common.h"
 #include <stdlib.h>
+#include <string.h>
 char* testRead(uv_stream_t *client, ssize_t nread, uv_buf_t* buf) {
 	char* tmp;
 	tmp = malloc(nread + 1);
@@ -23,7 +24,6 @@ void write_to_tty_test(uv_stream_t* tty, char* s) {
 }
 */
 import "C"
-
 import (
 	"fmt"
 	"unsafe"
