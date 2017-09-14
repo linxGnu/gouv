@@ -85,9 +85,52 @@ func testTCP(t *testing.T, dfLoop *UvLoop) {
 
 	go runPythonClient(t, dfLoop)
 
-	go runSockClient(t, dfLoop)
+	go runSockClient(t, dfLoop, testServerPort)
 
-	go runUvTcpClient(t, dfLoop)
+	go runUvTcpClient(t, dfLoop, testServerPort)
+
+	go func() {
+		time.Sleep(6 * time.Second)
+
+		// try to close connection first
+		shutDown := NewUvShutdown(nil)
+		if r := server.Shutdown(shutDown.s, func(h *Request, status int) {
+			fmt.Println("Shutting down tcp server", h, status)
+		}); r != 0 {
+			t.Fatal(ParseUvErr(r))
+		} else {
+			fmt.Println("Shutting down tcp server")
+		}
+
+		// stop read
+		if r := server.ReadStop(); r != 0 {
+			t.Fatal(ParseUvErr(r))
+		}
+	}()
+}
+
+func TestTCP2(t *testing.T) {
+	doTestWithLoop(t, testTCP2, nil, 10)
+}
+
+func testTCP2(t *testing.T, dfLoop *UvLoop) {
+	defer func() {
+		if e := recover(); e != nil {
+			fmt.Println(e)
+		}
+	}()
+
+	defer os.Remove("/tmp/stderr.txt")
+	defer os.Remove("/tmp/stdout.txt")
+
+	var flags uint = 0
+	server := initServer(t, dfLoop, &flags, 10000)
+
+	go runPythonClient(t, dfLoop)
+
+	go runSockClient(t, dfLoop, 10000)
+
+	go runUvTcpClient(t, dfLoop, 10000)
 
 	go func() {
 		time.Sleep(6 * time.Second)
@@ -142,7 +185,7 @@ func runPythonClient(t *testing.T, dfLoop *UvLoop) {
 	}()
 }
 
-func runUvTcpClient(t *testing.T, dfLoop *UvLoop) {
+func runUvTcpClient(t *testing.T, dfLoop *UvLoop, testServerPort uint16) {
 	defer func() {
 		if e := recover(); e != nil {
 			fmt.Println(e)
@@ -183,7 +226,7 @@ func runUvTcpClient(t *testing.T, dfLoop *UvLoop) {
 	}()
 }
 
-func runSockClient(t *testing.T, dfLoop *UvLoop) {
+func runSockClient(t *testing.T, dfLoop *UvLoop, testServerPort uint16) {
 	defer func() {
 		if e := recover(); e != nil {
 			fmt.Println(e)

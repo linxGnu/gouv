@@ -27,6 +27,7 @@ func UvPipeInit(loop *UvLoop, ipc int, data interface{}) (*UvPipe, error) {
 	}
 
 	if r := C.uv_pipe_init(loop.GetNativeLoop(), t, C.int(ipc)); r != 0 {
+		C.free(unsafe.Pointer(t))
 		return nil, ParseUvErr(r)
 	}
 
@@ -82,6 +83,11 @@ func (p *UvPipe) PendingType() C.uv_handle_type {
 // GetPipeHandle get handle
 func (p *UvPipe) GetPipeHandle() *C.uv_pipe_t {
 	return p.p
+}
+
+// Freemem freemem pipe
+func (p *UvPipe) Freemem() {
+	C.free(unsafe.Pointer(p.p))
 }
 
 // TODO: uv_pipe_getsockname

@@ -3,6 +3,7 @@ package gouv
 // #cgo pkg-config: libuv
 /*
 #include <uv.h>
+#include "common.h"
 #include <stdlib.h>
 char* testRead(uv_stream_t *client, ssize_t nread, uv_buf_t* buf) {
 	char* tmp;
@@ -100,4 +101,19 @@ func sampleTTY(tty *UvTTY) {
 	defer C.free(unsafe.Pointer(tst))
 
 	C.write_to_tty_test(tty.s, tst)
+}
+
+func sampleFSEvent(ev *UvFSEvent) {
+	ev.Start(func(h *Handle, path *C.char, events, status int) {
+		fmt.Println("caught!")
+	}, "tmp.tmp", 4)
+}
+
+// test_sendAndRecv do test with send and recv over sock
+func test_sendAndRecv(sock C.uv_os_sock_t) {
+	defer func() {
+		if e := recover(); e != nil {
+		}
+	}()
+	C.test_sendAndRecv(sock)
 }

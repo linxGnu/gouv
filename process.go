@@ -44,10 +44,22 @@ type UvStdioContainerData struct {
 	Fd     int
 }
 
+// Freemem container data, also free tagged stream
+func (c *UvStdioContainerData) Freemem() {
+	C.free(unsafe.Pointer(c.Stream))
+}
+
 // UvStdioContainer container for each stdio handle or fd passed to a child process.
 type UvStdioContainer struct {
 	Flags C.uv_stdio_flags
 	Data  *UvStdioContainerData
+}
+
+// Freemem stdio container, also freemem internal tagged stream.
+func (c *UvStdioContainer) Freemem() {
+	if c.Data != nil {
+		c.Data.Freemem()
+	}
 }
 
 // UvProcessOptions options for spawning the process, passed to uv_spawn()
@@ -78,6 +90,15 @@ type UvProcessOptions struct {
 
 	// GID libuv can change the child process’ group id. This happens only when the appropriate bits are set in the flags fields.
 	GID uint8
+}
+
+// Freemem process options, also freemem all internal tagged streams. Be careful.
+func (po *UvProcessOptions) Freemem() {
+	if po.Stdio != nil {
+		for _, v := range po.Stdio {
+			v.Freemem()
+		}
+	}
 }
 
 // UvProcess process handles will spawn a new process and allow the user to control it and establish communication channels with it using streams.
@@ -156,6 +177,7 @@ func UvSpawnProcess(loop *UvLoop, options *UvProcessOptions, data interface{}) (
 	p.data = unsafe.Pointer(&callbackInfo{exit_cb: options.ExitCb, data: data, ptr: res})
 	res.p, res.l, res.Handle = p, loop.GetNativeLoop(), Handle{(*C.uv_handle_t)(unsafe.Pointer(p)), p.data, res}
 	if r := uv_spawn(loop.GetNativeLoop(), p, opt); r != 0 {
+		C.free(unsafe.Pointer(p))
 		return nil, ParseUvErr(r)
 	}
 
@@ -175,6 +197,11 @@ func (p *UvProcess) Unref() {
 // GetProcessHandle get handle
 func (p *UvProcess) GetProcessHandle() *C.uv_process_t {
 	return p.p
+}
+
+// Freemem process
+func (p *UvProcess) Freemem() {
+	C.free(unsafe.Pointer(p.p))
 }
 
 // UvKill (uv_kill) sends the specified signal to the given PID. Check the documentation on uv_signal_t — Signal handle for signal support, specially on Windows.

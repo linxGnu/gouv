@@ -47,6 +47,7 @@ func IPv4Addr(host string, port uint16) (SockaddrIn, error) {
 
 	addr := C.mallocSockaddr_in()
 	if r := C.uv_ip4_addr(phost, C.int(port), addr); r != 0 {
+		C.free(unsafe.Pointer(addr))
 		return nil, ParseUvErr(r)
 	}
 
@@ -60,6 +61,7 @@ func IPv6Addr(host string, port uint16) (SockaddrIn, error) {
 
 	addr := C.mallocSockaddr_in6()
 	if r := C.uv_ip6_addr(phost, C.int(port), addr); r != 0 {
+		C.free(unsafe.Pointer(addr))
 		return nil, ParseUvErr(r)
 	}
 

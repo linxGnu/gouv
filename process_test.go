@@ -36,7 +36,7 @@ func testSpawnChildProcess(t *testing.T, dfLoop *UvLoop) {
 	process.Unref()
 
 	// kill this process
-	// process.Kill(9)
+	process.Freemem()
 }
 
 func TestKillProcess(t *testing.T) {
@@ -77,5 +77,8 @@ func testKillProcess(t *testing.T, dfLoop *UvLoop) {
 	// Try to kill this proces
 	process.Kill(2)
 
-	fmt.Printf("%p\n", process)
+	// Try to freemem
+	process.Freemem()
+
+	fmt.Println(process.GetProcessHandle())
 }

@@ -32,6 +32,7 @@ func UvPollInit(loop *UvLoop, fd int, data interface{}) (*UvPoll, error) {
 	t.data = unsafe.Pointer(&callbackInfo{data: data, ptr: res})
 	res.p, res.l, res.Handle = t, loop.GetNativeLoop(), Handle{(*C.uv_handle_t)(unsafe.Pointer(t)), t.data, res}
 	if r := C.uv_poll_init(loop.GetNativeLoop(), t, C.int(fd)); r != 0 {
+		C.free(unsafe.Pointer(t))
 		return nil, ParseUvErr(r)
 	}
 
@@ -51,6 +52,7 @@ func UvPollInitSocket(loop *UvLoop, socket C.uv_os_sock_t, data interface{}) (*U
 	t.data = unsafe.Pointer(&callbackInfo{data: data, ptr: res})
 	res.p, res.l, res.Handle = t, loop.GetNativeLoop(), Handle{(*C.uv_handle_t)(unsafe.Pointer(t)), t.data, res}
 	if r := C.uv_poll_init_socket(loop.GetNativeLoop(), t, socket); r != 0 {
+		C.free(unsafe.Pointer(t))
 		return nil, ParseUvErr(r)
 	}
 
@@ -74,4 +76,9 @@ func (p *UvPoll) Stop() C.int {
 // GetPollHandle get handle
 func (p *UvPoll) GetPollHandle() *C.uv_poll_t {
 	return p.p
+}
+
+// Freemem freemem handle
+func (p *UvPoll) Freemem() {
+	C.free(unsafe.Pointer(p.p))
 }

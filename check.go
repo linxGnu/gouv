@@ -30,6 +30,7 @@ func UvCheckInit(loop *UvLoop, data interface{}) (*UvCheck, error) {
 	t.data = unsafe.Pointer(&callbackInfo{data: data, ptr: res})
 	res.c, res.l, res.Handle = t, loop.GetNativeLoop(), Handle{(*C.uv_handle_t)(unsafe.Pointer(t)), t.data, res}
 	if r := C.uv_check_init(loop.GetNativeLoop(), t); r != 0 {
+		C.free(unsafe.Pointer(t))
 		return nil, ParseUvErr(r)
 	}
 
@@ -49,7 +50,7 @@ func (c *UvCheck) Stop() C.int {
 	return C.uv_check_stop(c.c)
 }
 
-// Freemem freemem of prepare
+// Freemem freemem handle
 func (c *UvCheck) Freemem() {
 	C.free(unsafe.Pointer(c.c))
 }

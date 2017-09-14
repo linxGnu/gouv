@@ -12,7 +12,7 @@ func TestPollerFile(t *testing.T) {
 
 func testPollerFile(t *testing.T, loop *UvLoop) {
 	// setup poller
-	poller, err := UvPollInit(loop, 2, nil)
+	poller, err := UvPollInit(loop, 1, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -25,12 +25,12 @@ func testPollerFile(t *testing.T, loop *UvLoop) {
 	}
 
 	go func() {
-		fmt.Println("TEST")
-
 		time.Sleep(2 * time.Second)
 
 		if r := poller.Stop(); r != 0 {
 			t.Fatal(ParseUvErr(r))
 		}
+
+		poller.Freemem()
 	}()
 }

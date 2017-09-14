@@ -30,6 +30,7 @@ func UvPrepareInit(loop *UvLoop, data interface{}) (*UvPrepare, error) {
 	t.data = unsafe.Pointer(&callbackInfo{data: data, ptr: res})
 	res.p, res.l, res.Handle = t, loop.GetNativeLoop(), Handle{(*C.uv_handle_t)(unsafe.Pointer(t)), t.data, res}
 	if r := C.uv_prepare_init(loop.GetNativeLoop(), t); r != 0 {
+		C.free(unsafe.Pointer(t))
 		return nil, ParseUvErr(r)
 	}
 

@@ -30,6 +30,7 @@ func UvSignalInit(loop *UvLoop, data interface{}) (*UvSignal, error) {
 	t.data = unsafe.Pointer(&callbackInfo{data: data, ptr: res})
 	res.s, res.l, res.Handle = t, loop.GetNativeLoop(), Handle{(*C.uv_handle_t)(unsafe.Pointer(t)), t.data, res}
 	if r := C.uv_signal_init(loop.GetNativeLoop(), t); r != 0 {
+		C.free(unsafe.Pointer(t))
 		return nil, ParseUvErr(r)
 	}
 
@@ -60,4 +61,9 @@ func (s *UvSignal) Stop() C.int {
 // GetSignalHandle get handle
 func (s *UvSignal) GetSignalHandle() *C.uv_signal_t {
 	return s.s
+}
+
+// Freemem freemem handle
+func (s *UvSignal) Freemem() {
+	C.free(unsafe.Pointer(s.s))
 }

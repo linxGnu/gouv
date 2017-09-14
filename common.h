@@ -43,6 +43,7 @@ extern void __uv_async_cb(uv_prepare_t *handle);
 extern void __uv_check_cb(uv_check_t *handle);
 extern void __uv_shutdown_cb(uv_shutdown_t *req, int status);
 extern void __uv_exit_cb(uv_process_t *process, int exit_status, int term_signal);
+extern void __uv_fs_event_cb(uv_fs_event_t* handle, char* filename, int events, int status);
 
 typedef struct connection_context_s
 {
@@ -62,6 +63,12 @@ typedef struct window_size_s
     int width;
     int height;
 } window_size_t;
+
+typedef struct char_result_s {
+    int err;
+    char *c;
+    size_t size;
+} char_result_t;
 
 static void _uv_alloc_cb(uv_handle_t *handle, size_t suggested_size, uv_buf_t *buf)
 {
@@ -184,6 +191,10 @@ static int _uv_spawn(uv_loop_t *loop, uv_process_t *process, uv_process_options_
 {
     options->exit_cb = __uv_exit_cb;
     return uv_spawn(loop, process, options);
+}
+
+static int _uv_fs_event_start(uv_fs_event_t* handle, const char* path, unsigned int flags) {
+    return uv_fs_event_start(handle, __uv_fs_event_cb, path, flags);
 }
 
 static uv_os_sock_t create_socket(struct sockaddr_in *bind_addr, int bound_socket, int protocol)

@@ -19,7 +19,7 @@ import (
 	"unsafe"
 )
 
-//UvShutdown shutdown request type
+// UvShutdown shutdown request type
 type UvShutdown struct {
 	s *C.uv_shutdown_t
 	Handle
@@ -34,6 +34,11 @@ func NewUvShutdown(data interface{}) *UvShutdown {
 	res.s, res.Handle = t, Handle{(*C.uv_handle_t)(unsafe.Pointer(t)), t.data, res}
 
 	return res
+}
+
+// Freemem request object
+func (s *UvShutdown) Freemem() {
+	C.free(unsafe.Pointer(s.s))
 }
 
 // UvWrite write request type. Careful attention must be paid when reusing objects of this type. When a stream is in non-blocking mode, write requests sent with uv_write will be queued. Reusing objects at this point is undefined behaviour. It is safe to reuse the uv_write_t object only after the callback passed to uv_write is fired.
@@ -53,6 +58,11 @@ func NewUvWrite(data interface{}) *UvWrite {
 	return res
 }
 
+// Freemem request object
+func (w *UvWrite) Freemem() {
+	C.free(unsafe.Pointer(w.w))
+}
+
 // UvConnect connect request type
 type UvConnect struct {
 	c *C.uv_connect_t
@@ -68,6 +78,11 @@ func NewUvConnect(data interface{}) *UvConnect {
 	res.c, res.Handle = t, Handle{(*C.uv_handle_t)(unsafe.Pointer(t)), t.data, res}
 
 	return res
+}
+
+// Freemem request object
+func (c *UvConnect) Freemem() {
+	C.free(unsafe.Pointer(c.c))
 }
 
 // UvStream handles provide an abstraction of a duplex communication channel. uv_stream_t is an abstract type, libuv provides 3 stream implementations in the form of uv_tcp_t, uv_pipe_t and uv_tty_t.

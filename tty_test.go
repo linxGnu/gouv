@@ -28,5 +28,7 @@ func testTTY(t *testing.T, loop *UvLoop) {
 		time.Sleep(2 * time.Second)
 
 		tty.ResetMode()
+
+		tty.Freemem()
 	}()
 }

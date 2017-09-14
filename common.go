@@ -147,6 +147,38 @@ const (
 	UV_TTY_MODE_IO UV_TTY_MODE = 2
 )
 
+// UV_FS_EVENT event types that uv_fs_event_t handles monitor.
+type UV_FS_EVENT_T int
+
+const (
+	UV_RENAME UV_FS_EVENT_T = 1
+	UV_CHANGE UV_FS_EVENT_T = 2
+)
+
+// UV_FS_EVENT_FLAGS flags that can be passed to uv_fs_event_start() to control its behavior.
+type UV_FS_EVENT_FLAGS int
+
+const (
+	// UV_FS_EVENT_WATCH_ENTRY by default, if the fs event watcher is given a directory name, we will
+	// watch for all events in that directory. This flags overrides this behavior
+	// and makes fs_event report only changes to the directory entry itself. This
+	// flag does not affect individual files watched.
+	// This flag is currently not implemented yet on any backend.
+	UV_FS_EVENT_WATCH_ENTRY UV_FS_EVENT_FLAGS = 1
+
+	// UV_FS_EVENT_STAT by default uv_fs_event will try to use a kernel interface such as inotify
+	// or kqueue to detect events. This may not work on remote file systems such
+	// as NFS mounts. This flag makes fs_event fall back to calling stat() on a
+	// regular interval.
+	// This flag is currently not implemented yet on any backend.
+	UV_FS_EVENT_STAT UV_FS_EVENT_FLAGS = 2
+
+	// UV_FS_EVENT_RECURSIVE by default, event watcher, when watching directory, is not registering
+	// (is ignoring) changes in its subdirectories.
+	// This flag will override this behaviour on platforms that support it.
+	UV_FS_EVENT_RECURSIVE UV_FS_EVENT_FLAGS = 4
+)
+
 // Request (uv_req_t) is the base type for all libuv request types.
 type Request struct {
 	r      *C.uv_req_t
@@ -172,6 +204,7 @@ type callbackInfo struct {
 	poll_cb       func(*Handle, int, int)
 	check_cb      func(*Handle)
 	shutdown_cb   func(*Request, int)
+	fs_event_cb   func(*Handle, *C.char, int, int)
 	timer_cb      func(*Handle, int)
 	signal_cb     func(*Handle, int)
 	idle_cb       func(*Handle, int)
@@ -326,6 +359,11 @@ func uv_try_write(stream *C.uv_stream_t, buf *C.uv_buf_t, bufcnt int) C.int {
 	return C._uv_try_write(stream, buf, C.int(bufcnt))
 }
 
+// uv_fs_event_start (uv_fs_event_start) start the handle with the given callback, which will watch the specified path for changes. flags can be an ORed mask of uv_fs_event_flags.
+func uv_fs_event_start(h *C.uv_fs_event_t, path *C.char, flags uint) C.int {
+	return C._uv_fs_event_start(h, path, C.uint(flags))
+}
+
 // uv_is_readable (uv_is_readable) returns if the stream is readable.
 func uv_is_readable(stream *C.uv_stream_t) bool {
 	return C.uv_is_readable(stream) == 1
@@ -434,22 +472,6 @@ func create_tcp_socket(addr SockaddrIn, isBoundSocket int) C.uv_os_sock_t {
 	return C.create_tcp_socket(addr.GetSockAddrIn(), C.int(isBoundSocket))
 }
 
-// test_sendAndRecv do test with send and recv over sock
-func test_sendAndRecv(sock C.uv_os_sock_t) {
-	defer func() {
-		if e := recover(); e != nil {
-		}
-	}()
-	C.test_sendAndRecv(sock)
-}
-
-func test_OpenFile(path string) C.int {
-	p := C.CString(path)
-	defer C.free(unsafe.Pointer(p))
-
-	return C.test_Open(p)
-}
-
 /*
 *			---------------------- EXPORT FUCTIONS ----------------------
  */
@@ -530,25 +552,25 @@ func __uv_shutdown_cb(s *C.uv_shutdown_t, status C.int) {
 
 //export __uv_udp_recv_cb
 func __uv_udp_recv_cb(u *C.uv_udp_t, nread C.ssize_t, buf *C.uv_buf_t, sa *C.struct_sockaddr, flags C.uint) {
-	if cbi := (*callbackInfo)(u.data); cbi.udp_recv_cb != nil {
-		nRead := int(nread)
-		if nRead < 0 {
-			cbi.udp_recv_cb(&Handle{
-				(*C.uv_handle_t)(unsafe.Pointer(u)), cbi.data, cbi.ptr}, nil, sa, uint(flags))
-		} else {
-			cbi.udp_recv_cb(&Handle{
-				(*C.uv_handle_t)(unsafe.Pointer(u)), cbi.data, cbi.ptr}, (*[1 << 30]byte)(unsafe.Pointer(buf.base))[0:nRead], sa, uint(flags))
-		}
-	}
+	// if cbi := (*callbackInfo)(u.data); cbi.udp_recv_cb != nil {
+	// 	nRead := int(nread)
+	// 	if nRead < 0 {
+	// 		cbi.udp_recv_cb(&Handle{
+	// 			(*C.uv_handle_t)(unsafe.Pointer(u)), cbi.data, cbi.ptr}, nil, sa, uint(flags))
+	// 	} else {
+	// 		cbi.udp_recv_cb(&Handle{
+	// 			(*C.uv_handle_t)(unsafe.Pointer(u)), cbi.data, cbi.ptr}, (*[1 << 30]byte)(unsafe.Pointer(buf.base))[0:nRead], sa, uint(flags))
+	// 	}
+	// }
 }
 
 //export __uv_udp_send_cb
 func __uv_udp_send_cb(us *C.uv_udp_send_t, status C.int) {
-	if cbi := (*callbackInfo)(us.handle.data); cbi.udp_send_cb != nil {
-		cbi.udp_send_cb(&Request{
-			(*C.uv_req_t)(unsafe.Pointer(us)),
-			&Handle{(*C.uv_handle_t)(unsafe.Pointer(us.handle)), cbi.data, cbi.ptr}}, int(status))
-	}
+	// if cbi := (*callbackInfo)(us.handle.data); cbi.udp_send_cb != nil {
+	// 	cbi.udp_send_cb(&Request{
+	// 		(*C.uv_req_t)(unsafe.Pointer(us)),
+	// 		&Handle{(*C.uv_handle_t)(unsafe.Pointer(us.handle)), cbi.data, cbi.ptr}}, int(status))
+	// }
 }
 
 //export __uv_timer_cb
@@ -583,5 +605,12 @@ func __uv_idle_cb(i *C.uv_idle_t, status C.int) {
 func __uv_exit_cb(pc *C.uv_process_t, exit_status C.int, term_signal C.int) {
 	if cbi := (*callbackInfo)(pc.data); cbi.exit_cb != nil {
 		cbi.exit_cb(&Handle{(*C.uv_handle_t)(unsafe.Pointer(pc)), cbi.data, cbi.ptr}, int(exit_status), int(term_signal))
+	}
+}
+
+//export __uv_fs_event_cb
+func __uv_fs_event_cb(h *C.uv_fs_event_t, filename *C.char, events, status C.int) {
+	if cbi := (*callbackInfo)(h.data); cbi.fs_event_cb != nil {
+		cbi.fs_event_cb(&Handle{(*C.uv_handle_t)(unsafe.Pointer(h)), cbi.data, cbi.ptr}, filename, int(events), int(status))
 	}
 }

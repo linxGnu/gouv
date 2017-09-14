@@ -41,13 +41,13 @@ func UvTTYInit(loop *UvLoop, fd C.uv_file, readable int, data interface{}) (*UvT
 		loop = UvLoopDefault()
 	}
 
-	if r := C.uv_tty_init(loop.GetNativeLoop(), t, fd, C.int(readable)); r != 0 {
-		return nil, ParseUvErr(r)
-	}
-
 	res := &UvTTY{}
 	t.data = unsafe.Pointer(&callbackInfo{ptr: res, data: data})
 	res.s, res.l, res.t, res.Handle = (*C.uv_stream_t)(unsafe.Pointer(t)), loop.GetNativeLoop(), t, Handle{(*C.uv_handle_t)(unsafe.Pointer(t)), t.data, res}
+	if r := C.uv_tty_init(loop.GetNativeLoop(), t, fd, C.int(readable)); r != 0 {
+		C.free(unsafe.Pointer(t))
+		return nil, ParseUvErr(r)
+	}
 
 	return res, nil
 }
@@ -69,4 +69,9 @@ func (t *UvTTY) GetWinsize() (err C.int, width C.int, height C.int) {
 	defer C.free(unsafe.Pointer(ws))
 
 	return ws.err, ws.width, ws.height
+}
+
+// Freemem freemem of TTY
+func (t *UvTTY) Freemem() {
+	C.free(unsafe.Pointer(t.t))
 }

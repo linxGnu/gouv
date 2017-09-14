@@ -30,6 +30,7 @@ func UvIdleInit(loop *UvLoop, data interface{}) (*UvIdle, error) {
 	t.data = unsafe.Pointer(&callbackInfo{data: data, ptr: res})
 	res.i, res.l, res.Handle = t, loop.GetNativeLoop(), Handle{(*C.uv_handle_t)(unsafe.Pointer(t)), t.data, res}
 	if r := C.uv_idle_init(loop.GetNativeLoop(), t); r != 0 {
+		C.free(unsafe.Pointer(t))
 		return nil, ParseUvErr(r)
 	}
 
@@ -49,7 +50,7 @@ func (idle *UvIdle) Stop() C.int {
 	return C.uv_idle_stop(idle.i)
 }
 
-// Freemem freemem of prepare
+// Freemem freemem handle
 func (idle *UvIdle) Freemem() {
 	C.free(unsafe.Pointer(idle.i))
 }

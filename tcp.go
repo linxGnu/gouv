@@ -30,10 +30,12 @@ func TCPInit(loop *UvLoop, flags *uint, data interface{}) (*UvTCP, error) {
 
 	if flags == nil {
 		if r := C.uv_tcp_init(loop.GetNativeLoop(), t); r != 0 {
+			C.free(unsafe.Pointer(t))
 			return nil, ParseUvErr(r)
 		}
 	} else {
 		if r := C.uv_tcp_init_ex(loop.GetNativeLoop(), t, C.uint(*flags)); r != 0 {
+			C.free(unsafe.Pointer(t))
 			return nil, ParseUvErr(r)
 		}
 	}

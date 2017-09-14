@@ -27,6 +27,7 @@ func TimerInit(loop *UvLoop, data interface{}) (*UvTimer, error) {
 	}
 
 	if r := C.uv_timer_init(loop.GetNativeLoop(), t); r != 0 {
+		C.free(unsafe.Pointer(t))
 		return nil, ParseUvErr(r)
 	}
 

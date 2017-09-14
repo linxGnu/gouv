@@ -9,7 +9,7 @@ import (
 func doTest(t *testing.T, run func(t *testing.T, loop *UvLoop), timeout int) {
 	loop := UvLoopCreate()
 
-	fmt.Println("Loop at:", loop.GetNativeLoop())
+	fmt.Printf("Loop at: %p\n", loop.GetNativeLoop())
 
 	// do real test
 	run(t, loop)
@@ -28,7 +28,9 @@ func doTestWithLoop(t *testing.T, run func(t *testing.T, loop *UvLoop), loop *Uv
 	// do real test
 	run(t, loop)
 
-	loop = UvLoopDefault()
+	if loop == nil {
+		loop = UvLoopDefault()
+	}
 
 	// run but not blocking
 	go loop.Run(UV_RUN_DEFAULT)

@@ -30,6 +30,7 @@ func UvAsyncInit(loop *UvLoop, data interface{}, cb func(*Handle)) (*UvAsync, er
 	t.data = unsafe.Pointer(&callbackInfo{data: data, async_cb: cb, ptr: res})
 	res.a, res.l, res.Handle = t, loop.GetNativeLoop(), Handle{(*C.uv_handle_t)(unsafe.Pointer(t)), t.data, res}
 	if r := uv_async_init(loop.GetNativeLoop(), t); r != 0 {
+		C.free(unsafe.Pointer(t))
 		return nil, ParseUvErr(r)
 	}
 
@@ -44,4 +45,9 @@ func (a *UvAsync) Send() C.int {
 // GetAsyncHandle get handle
 func (a *UvAsync) GetAsyncHandle() *C.uv_async_t {
 	return a.a
+}
+
+// Freemem freemem handle
+func (a *UvAsync) Freemem() {
+	C.free(unsafe.Pointer(a.a))
 }

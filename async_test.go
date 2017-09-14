@@ -3,10 +3,13 @@ package gouv
 import (
 	"fmt"
 	"testing"
+	"time"
 )
 
 func TestAsync(t *testing.T) {
 	doTest(t, test_async, 2)
+
+	doTestWithLoop(t, test_async, nil, 2)
 }
 
 func test_async(t *testing.T, dfLoop *UvLoop) {
@@ -25,7 +28,13 @@ func test_async(t *testing.T, dfLoop *UvLoop) {
 		t.Fatal(err)
 	}
 
-	if r := async.Send(); r != 0 {
-		t.Fatal(ParseUvErr(r))
-	}
+	go func() {
+		if r := async.Send(); r != 0 {
+			t.Fatal(ParseUvErr(r))
+		}
+
+		time.Sleep(1 * time.Second)
+
+		async.Freemem()
+	}()
 }

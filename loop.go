@@ -14,6 +14,7 @@ uv_loop_t* create_loop()
 }
 */
 import "C"
+import "unsafe"
 
 // UvLoop wrapper of C.uv_loop_t
 type UvLoop struct {
@@ -88,6 +89,11 @@ func (uvl *UvLoop) BackendFD() C.int {
 // BackendTimeout (uv_backend_timeout) Get the poll timeout. The return value is in milliseconds, or -1 for no timeout.
 func (uvl *UvLoop) BackendTimeout() uint64 {
 	return uint64(C.uv_backend_timeout(uvl.loop))
+}
+
+// Freemem loop
+func (uvl *UvLoop) Freemem() {
+	C.free(unsafe.Pointer(uvl.loop))
 }
 
 // TODO: uv_loop_configure
