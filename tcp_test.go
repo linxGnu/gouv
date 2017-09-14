@@ -67,6 +67,10 @@ func initServer(t *testing.T, loop *UvLoop, flag *uint, port uint16) (connection
 	return
 }
 
+func TestTCP(t *testing.T) {
+	doTest(t, testTCP, 10)
+}
+
 func testTCP(t *testing.T, dfLoop *UvLoop) {
 	defer func() {
 		if e := recover(); e != nil {
@@ -86,7 +90,7 @@ func testTCP(t *testing.T, dfLoop *UvLoop) {
 	go runUvTcpClient(t, dfLoop)
 
 	go func() {
-		time.Sleep(20 * time.Second)
+		time.Sleep(6 * time.Second)
 
 		// try to close connection first
 		shutDown := NewUvShutdown(nil)
@@ -145,9 +149,6 @@ func runUvTcpClient(t *testing.T, dfLoop *UvLoop) {
 		}
 	}()
 
-	//
-	time.Sleep(1 * time.Second)
-
 	serverAddr, err := IPv4Addr("127.0.0.1", testServerPort)
 	if err != nil {
 		t.Fatal(err)
@@ -166,18 +167,20 @@ func runUvTcpClient(t *testing.T, dfLoop *UvLoop) {
 
 	sampleTCPReadOfClient(tcp)
 
-	time.Sleep(5 * time.Second)
+	go func() {
+		time.Sleep(3 * time.Second)
 
-	shutDown := NewUvShutdown(nil)
-	if r := tcp.Shutdown(shutDown.s, func(h *Request, status int) {
-		fmt.Println("Shutdown uv_tcp_t client!", h, status)
-	}); r != 0 {
-		t.Fatal(ParseUvErr(r))
-	} else {
-		fmt.Println("Shutting down uv_tcp_t client!")
-	}
+		shutDown := NewUvShutdown(nil)
+		if r := tcp.Shutdown(shutDown.s, func(h *Request, status int) {
+			fmt.Println("Shutdown uv_tcp_t client!", h, status)
+		}); r != 0 {
+			t.Fatal(ParseUvErr(r))
+		} else {
+			fmt.Println("Shutting down uv_tcp_t client!")
+		}
 
-	tcp.ReadStop()
+		tcp.ReadStop()
+	}()
 }
 
 func runSockClient(t *testing.T, dfLoop *UvLoop) {
@@ -223,7 +226,7 @@ func runSockClient(t *testing.T, dfLoop *UvLoop) {
 	}
 
 	// Stop poller
-	// if r := poller.Stop(); r != 0 {
-	// 	t.Fatal(ParseUvErr(r))
-	// }
+	if r := poller.Stop(); r != 0 {
+		t.Fatal(ParseUvErr(r))
+	}
 }

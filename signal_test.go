@@ -5,9 +5,12 @@ import (
 	"testing"
 )
 
-func testSignal(t *testing.T) {
+func TestSignal(t *testing.T) {
+	doTest(t, testSignal, 2)
+}
+
+func testSignal(t *testing.T, loop *UvLoop) {
 	go func() {
-		loop := UvLoopCreate()
 		signal, err := UvSignalInit(loop, nil)
 		if err != nil {
 			t.Fatal(err)

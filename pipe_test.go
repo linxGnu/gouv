@@ -7,15 +7,13 @@ import (
 	"time"
 )
 
+func TestPipe(t *testing.T) {
+	doTest(t, testPipe, 5)
+
+	doTestWithLoop(t, testPipe, nil, 5)
+}
+
 func testPipe(t *testing.T, dfLoop *UvLoop) {
-	defer func() {
-		if e := recover(); e != nil {
-			fmt.Println(e)
-		}
-	}()
-
-	time.Sleep(2 * time.Second)
-
 	pServer, err := UvPipeInit(dfLoop, 0, nil)
 	if err != nil {
 		t.Fatal(err)

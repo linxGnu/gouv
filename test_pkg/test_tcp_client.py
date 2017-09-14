@@ -21,7 +21,7 @@ while count < 100:
     count += 1
     print count
 
-    client.send('GET /index.html')
+    client.send('Hello from python client!')
 
     # receive the response data (4096 is recommended buffer size)
     response = client.recv(4096)

@@ -7,104 +7,14 @@ import (
 	"time"
 )
 
-func TestAll(t *testing.T) {
-	loop := UvLoopDefault()
-	if loop == nil {
-		t.Fatalf("NewUvLoopDefault failed")
-	}
-
-	if r := loop.Init(); r != 0 {
-		t.Fatal(ParseUvErr(r))
-	}
-
-	if r := loop.GetNativeLoop(); r == nil {
-		t.Fatalf("NewUvLoopDefault failed")
-	}
-
-	go loop.Run(UV_RUN_DEFAULT)
-
-	// try to stop
-	time.Sleep(200 * time.Millisecond)
-	loop.Stop()
-	time.Sleep(200 * time.Millisecond)
-	if r := loop.Alive(); r > 0 {
-		t.Fatalf("Loop not stop well")
-	}
-
-	go loop.Run(UV_RUN_NOWAIT)
-	time.Sleep(100 * time.Millisecond)
-	loop.Stop()
-
-	go loop.Run(UV_RUN_ONCE)
-	time.Sleep(100 * time.Millisecond)
-	loop.Stop()
-
-	// try to print backend fd and timeout
-	fmt.Println(loop.BackendFD(), loop.BackendTimeout())
-
-	//
-	loop = UvLoopDefault()
-	if r := loop.Init(); r != 0 {
-		t.Fatal(ParseUvErr(r))
-	}
-
-	// setup poller
-	poller, err := UvPollInit(nil, int(test_OpenFile("test_pkg/tcp_client_sock.c")), nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-	fmt.Println("Poller file:", poller.GetPollHandle())
-
-	//
-	testAsync(t, nil)
-
-	//
-	testIdlePrepareCheckerTimer(t, nil)
-
-	// //
-	testSpawnChildProcess(t, nil)
-
-	// //
-	testKillProcess(t, nil)
-
-	//
-	testTCP(t, nil)
-
-	//
-	testSignal(t)
-
-	//
-	if r := poller.Start(int(UV_READABLE), func(h *Handle, status int, events int) {
-		fmt.Println("Poll start callbacked!!!!!", status, events)
-	}); r != 0 {
-		t.Fatal(ParseUvErr(r))
-	}
-	if r := poller.Stop(); r != 0 {
-		t.Fatal(ParseUvErr(r))
-	}
-
-	//
-	go testPipe(t, nil)
-
-	go loop.Run(UV_RUN_DEFAULT)
-
-	// try to update time
-	loop.UpdateTime()
-	n1 := loop.Now()
-	time.Sleep(10 * time.Millisecond)
-	loop.UpdateTime()
-	n2 := loop.Now()
-	if n1 == n2 {
-		t.Fatalf("Update time fail")
-	}
-
-	time.Sleep(20 * time.Second)
-	go loop.Close()
+func TestIdlePrepareCheckerTimer(t *testing.T) {
+	doTest(t, testIdlePrepareCheckerTimer, 20)
 }
 
 func testIdlePrepareCheckerTimer(t *testing.T, dfLoop *UvLoop) {
-	go func() {
+	defer func() {
 		if e := recover(); e != nil {
+			fmt.Println(e)
 		}
 	}()
 
@@ -168,33 +78,22 @@ func testIdlePrepareCheckerTimer(t *testing.T, dfLoop *UvLoop) {
 
 	timer1.Start(func(h *Handle, status int) {
 		log.Println(h.Data)
-	}, 1000, 1500)
+	}, 200, 300)
 
 	timer2.Start(func(h *Handle, status int) {
 		log.Println(h.Data)
-	}, 1000, 1500)
+	}, 200, 300)
 
 	go func() {
-		go func() {
-			if e := recover(); e != nil {
-			}
-		}()
-
 		time.Sleep(2 * time.Second)
 		timer1.Again()
-		timer1.SetRepeat(1600)
+		timer1.SetRepeat(500)
 
 		timer2.Again()
-		timer2.SetRepeat(2700)
-	}()
+		timer2.SetRepeat(300)
 
-	go func() {
-		go func() {
-			if e := recover(); e != nil {
-			}
-		}()
-
-		time.Sleep(3 * time.Second)
+		// try to stop timer 2
+		time.Sleep(2 * time.Second)
 
 		fmt.Println(timer2.GetRepeat())
 
@@ -209,15 +108,9 @@ func testIdlePrepareCheckerTimer(t *testing.T, dfLoop *UvLoop) {
 		fmt.Println(timer2.IsActive(), timer2.IsClosing())
 
 		timer2.Freemem()
-	}()
 
-	go func() {
-		go func() {
-			if e := recover(); e != nil {
-			}
-		}()
-
-		time.Sleep(8 * time.Second)
+		// try to stop timer 1 and others
+		time.Sleep(2 * time.Second)
 
 		fmt.Println(timer1.GetRepeat())
 

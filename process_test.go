@@ -7,6 +7,10 @@ import (
 	"time"
 )
 
+func TestSpawnChildProcess(t *testing.T) {
+	doTest(t, testSpawnChildProcess, 1)
+}
+
 func testSpawnChildProcess(t *testing.T, dfLoop *UvLoop) {
 	// spawn new process
 	process, err := UvSpawnProcess(dfLoop, &UvProcessOptions{
@@ -35,7 +39,10 @@ func testSpawnChildProcess(t *testing.T, dfLoop *UvLoop) {
 	// process.Kill(9)
 }
 
-// fileExists reports whether the named file or directory exists.
+func TestKillProcess(t *testing.T) {
+	doTest(t, testKillProcess, 3)
+}
+
 func fileExists(name string) bool {
 	if _, err := os.Stat(name); err != nil {
 		if os.IsNotExist(err) {
@@ -48,7 +55,7 @@ func fileExists(name string) bool {
 func testKillProcess(t *testing.T, dfLoop *UvLoop) {
 	// spawn new process
 	process, err := UvSpawnProcess(dfLoop, &UvProcessOptions{
-		Args:  []string{"sleep", "100000"},
+		Args:  []string{"sleep", "10000"},
 		Cwd:   "/tmp",
 		Flags: UV_PROCESS_DETACHED,
 		File:  "sleep",
@@ -62,13 +69,13 @@ func testKillProcess(t *testing.T, dfLoop *UvLoop) {
 		t.Fatal(err)
 	}
 
-	time.Sleep(1 * time.Second)
+	time.Sleep(2 * time.Second)
 
 	// Unref this process
 	process.Unref()
 
 	// Try to kill this proces
-	process.Kill(9)
+	process.Kill(2)
 
 	fmt.Printf("%p\n", process)
 }

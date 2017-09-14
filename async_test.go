@@ -3,15 +3,18 @@ package gouv
 import (
 	"fmt"
 	"testing"
-	"time"
 )
 
-func testAsync(t *testing.T, dfLoop *UvLoop) {
+func TestAsync(t *testing.T) {
+	doTest(t, test_async, 2)
+}
+
+func test_async(t *testing.T, dfLoop *UvLoop) {
 	async, err := UvAsyncInit(dfLoop, map[int]string{1: "a"}, func(h *Handle) {
 		if h.Data != nil {
 			x := h.Data.(map[int]string)
 			if st, ok := x[1]; ok && st == "a" {
-				fmt.Println(h.Ptr.(*UvAsync))
+				fmt.Println("Got async handle callback:", h.Ptr.(*UvAsync))
 				return
 			}
 		}
@@ -22,12 +25,7 @@ func testAsync(t *testing.T, dfLoop *UvLoop) {
 		t.Fatal(err)
 	}
 
-	fmt.Println(async.GetAsyncHandle())
-
-	go func() {
-		time.Sleep(100 * time.Millisecond)
-		if r := async.Send(); r != 0 {
-			t.Fatal(ParseUvErr(r))
-		}
-	}()
+	if r := async.Send(); r != 0 {
+		t.Fatal(ParseUvErr(r))
+	}
 }

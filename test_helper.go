@@ -35,7 +35,7 @@ func sampleTCPReadHandling(h *Handle, buf *C.uv_buf_t, nRead C.ssize_t) {
 }
 
 func sampleTCPReadOfClient(conn *UvTCP) {
-	st := C.CString("Hello server")
+	st := C.CString("Hello from uv_tcp client")
 	defer C.free(unsafe.Pointer(st))
 
 	bufs := MallocUvBuf(1)

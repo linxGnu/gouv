@@ -267,7 +267,7 @@ static void test_sendAndRecv(uv_os_sock_t sockfd)
     int numbytes;
     char buf[4096];
 
-    if (send(sockfd, "Hello, world!\n", 14, 0) == -1)
+    if (send(sockfd, "Hello world from sock client!\n", 14, 0) == -1)
     {
         return;
     }
