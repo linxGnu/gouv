@@ -180,7 +180,7 @@ func runPythonClient(t *testing.T, loop *UvLoop) {
 		// Unref this process
 		pythonClient.Unref()
 
-		// Try to kill this proces
+		// Try to kill this process
 		pythonClient.Kill(9)
 	}()
 }

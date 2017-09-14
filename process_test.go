@@ -62,7 +62,7 @@ func testKillProcess(t *testing.T, loop *UvLoop) {
 	// Unref this process
 	process.Unref()
 
-	// Try to kill this proces
+	// Try to kill this process
 	process.Kill(2)
 
 	// Try to freemem

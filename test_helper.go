@@ -134,12 +134,12 @@ func sampleProcessInit(loop *UvLoop) (process *UvProcess, err error) {
 		Flags: UV_PROCESS_DETACHED,
 		File:  "ls",
 		Stdio: []*UvStdioContainer{
-			&UvStdioContainer{Flags: C.int(UV_IGNORE)},
-			&UvStdioContainer{
+			{Flags: C.int(UV_IGNORE)},
+			{
 				Flags: C.int(UV_INHERIT_FD),
 				Data:  &UvStdioContainerData{Fd: 1},
 			},
-			&UvStdioContainer{Flags: C.int(UV_IGNORE)},
+			{Flags: C.int(UV_IGNORE)},
 		},
 	}, nil)
 

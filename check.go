@@ -55,7 +55,7 @@ func (c *UvCheck) Freemem() {
 	C.free(unsafe.Pointer(c.c))
 }
 
-// GetAsyncHandle get handle
+// GetCheckHandle get check handle
 func (c *UvCheck) GetCheckHandle() *C.uv_check_t {
 	return c.c
 }
