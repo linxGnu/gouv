@@ -107,6 +107,8 @@ func testIdlePrepareCheckerTimer(t *testing.T, loop *UvLoop) {
 
 		fmt.Println(timer2.IsActive(), timer2.IsClosing())
 
+		time.Sleep(1 * time.Second)
+
 		timer2.Freemem()
 
 		// try to stop timer 1 and others
@@ -117,6 +119,12 @@ func testIdlePrepareCheckerTimer(t *testing.T, loop *UvLoop) {
 		if r := timer1.Stop(); r != 0 {
 			t.Fatal(ParseUvErr(r))
 		}
+
+		timer1.Close(func(h *Handle) {
+			fmt.Println("Timer is closed")
+		})
+
+		time.Sleep(1 * time.Second)
 
 		timer1.Freemem()
 

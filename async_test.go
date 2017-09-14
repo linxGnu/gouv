@@ -7,9 +7,7 @@ import (
 )
 
 func TestAsync(t *testing.T) {
-	doTest(t, testAsync, 2)
-
-	doTestWithLoop(t, testAsync, nil, 2)
+	doTest(t, testAsync, 4)
 }
 
 func testAsync(t *testing.T, loop *UvLoop) {

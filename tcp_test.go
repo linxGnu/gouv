@@ -68,7 +68,7 @@ func initServer(t *testing.T, loop *UvLoop, flag *uint, port uint16) (connection
 }
 
 func TestTCP(t *testing.T) {
-	doTest(t, testTCP, 10)
+	doTest(t, testTCP, 15)
 }
 
 func testTCP(t *testing.T, loop *UvLoop) {
@@ -86,6 +86,42 @@ func testTCP(t *testing.T, loop *UvLoop) {
 	go runPythonClient(t, loop)
 
 	go runUvTcpClient(t, loop, testServerPort)
+
+	go func() {
+		time.Sleep(6 * time.Second)
+
+		// try to close connection first
+		shutDown := NewUvShutdown(nil)
+		if r := server.Shutdown(shutDown.s, func(h *Request, status int) {
+			fmt.Println("Shutting down tcp server", h, status)
+		}); r != 0 {
+			t.Fatal(ParseUvErr(r))
+		} else {
+			fmt.Println("Shutting down tcp server")
+		}
+
+		// stop read
+		if r := server.ReadStop(); r != 0 {
+			t.Fatal(ParseUvErr(r))
+		}
+	}()
+}
+
+func TestTCP2(t *testing.T) {
+	doTestWithLoop(t, testTCP2, nil, 10)
+}
+
+func testTCP2(t *testing.T, loop *UvLoop) {
+	defer func() {
+		if e := recover(); e != nil {
+			fmt.Println(e)
+		}
+	}()
+
+	var flags uint = 0
+	server := initServer(t, loop, &flags, 10000)
+
+	go runUvTcpClient(t, loop, 10000)
 
 	go func() {
 		time.Sleep(6 * time.Second)
@@ -159,17 +195,18 @@ func runUvTcpClient(t *testing.T, loop *UvLoop, testServerPort uint16) {
 	cnRe := NewUvConnect(nil)
 	if r := tcp.Connect(cnRe, serverAddr, func(h *Request, status int) {
 		conn := h.Handle.Ptr.(*UvTCP)
+
 		fmt.Println("Connected to server", conn)
+
+		cnRe.Freemem()
 	}); r != 0 {
 		t.Fatal(ParseUvErr(r))
-	} else {
-		cnRe.Freemem()
 	}
 
 	sampleTCPReadOfClient(tcp)
 
 	go func() {
-		time.Sleep(3 * time.Second)
+		time.Sleep(2 * time.Second)
 
 		shutDown := NewUvShutdown(nil)
 		if r := tcp.Shutdown(shutDown.s, func(h *Request, status int) {
@@ -178,8 +215,11 @@ func runUvTcpClient(t *testing.T, loop *UvLoop, testServerPort uint16) {
 			t.Fatal(ParseUvErr(r))
 		} else {
 			fmt.Println("Shutting down uv_tcp_t client!")
-			shutDown.Freemem()
 		}
+
+		time.Sleep(1 * time.Second)
+
+		shutDown.Freemem()
 
 		tcp.ReadStop()
 	}()
