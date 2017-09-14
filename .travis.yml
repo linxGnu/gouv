@@ -17,6 +17,8 @@ before_install:
 - make
 - sudo make install
 - sudo ldconfig
+- cd ..
+- sudo rm -rf libuv-v1.14.1 libuv-v1.14.1.tar.gz
 
 before_script:
 - go get github.com/mattn/goveralls
