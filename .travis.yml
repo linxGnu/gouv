@@ -4,6 +4,8 @@ go:
 - 1.8
 - 1.9
 
+sudo: enabled
+
 before_script:
 - sudo apt-get -qq update
 - sudo apt-get install -y pkg-config wget automake libtool make
