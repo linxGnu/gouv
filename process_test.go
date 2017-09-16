@@ -67,6 +67,4 @@ func testKillProcess(t *testing.T, loop *UvLoop) {
 
 	// Try to freemem
 	process.Freemem()
-
-	fmt.Println(process.GetProcessHandle())
 }

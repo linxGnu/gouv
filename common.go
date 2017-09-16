@@ -180,6 +180,16 @@ const (
 	UV_FS_EVENT_RECURSIVE UV_FS_EVENT_FLAGS = 4
 )
 
+// AllocCallback delegate alloc_callback to end user
+type AllocCallback func(h *C.uv_handle_t, suggested_size C.size_t, buf *C.uv_buf_t)
+
+var allocCallback AllocCallback
+
+// SetAllocCallback set alloc callback. This function is not thread-safe and must be called at initial state (before uv_tcp_read_start or uv_udp_read_start).
+func SetAllocCallback(cb AllocCallback) {
+	allocCallback = cb
+}
+
 // Request (uv_req_t) is the base type for all libuv request types.
 type Request struct {
 	r      *C.uv_req_t
@@ -395,9 +405,9 @@ func uv_udp_send(req *C.uv_udp_send_t, udp *C.uv_udp_t, buf *C.uv_buf_t, bufcnt 
 	return C._uv_udp_send(req, udp, buf, C.uint(bufcnt), sa)
 }
 
-func uv_udp_recv_start(udp *C.uv_udp_t) C.int {
-	return C._uv_udp_recv_start(udp)
-}
+// func uv_udp_recv_start(udp *C.uv_udp_t) C.int {
+// 	return C._uv_udp_recv_start(udp)
+// }
 
 func uv_udp_recv_stop(udp *C.uv_udp_t) C.int {
 	return C.uv_udp_recv_stop(udp)
@@ -628,4 +638,18 @@ func __uv_fs_poll_cb(h *C.uv_fs_poll_t, status C.int, prev *C.uv_stat_t, curr *C
 	if cbi := (*callbackInfo)(h.data); cbi.fs_poll_cb != nil {
 		cbi.fs_poll_cb(&Handle{(*C.uv_handle_t)(unsafe.Pointer(h)), cbi.data, cbi.ptr}, status, prev, curr)
 	}
+}
+
+//export __uv_alloc_cb
+func __uv_alloc_cb(h *C.uv_handle_t, suggested_size C.size_t, buf *C.uv_buf_t) {
+	if allocCallback != nil {
+		allocCallback(h, suggested_size, buf)
+		return
+	}
+
+	defaultAllocCallback(h, suggested_size, buf)
+}
+
+func defaultAllocCallback(h *C.uv_handle_t, suggestedSize C.size_t, buf *C.uv_buf_t) {
+	C._uv_alloc_cb(h, suggestedSize, buf)
 }

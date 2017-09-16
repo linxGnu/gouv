@@ -16,7 +16,6 @@ func testPollerFile(t *testing.T, loop *UvLoop) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	fmt.Println("Poller file:", poller.GetPollHandle())
 
 	if r := poller.Start(int(UV_READABLE|UV_WRITABLE), func(h *Handle, status int, events int) {
 		fmt.Println("Poll callbacked!!!!!", status, events)

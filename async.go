@@ -13,8 +13,8 @@ import "unsafe"
 
 // UvAsync handles allow the user to “wakeup” the event loop and get a callback called from another thread.
 type UvAsync struct {
-	a *C.uv_async_t
-	l *C.uv_loop_t
+	Async *C.uv_async_t
+	Loop  *C.uv_loop_t
 	Handle
 }
 
@@ -28,7 +28,7 @@ func UvAsyncInit(loop *UvLoop, data interface{}, cb func(*Handle)) (*UvAsync, er
 
 	res := &UvAsync{}
 	t.data = unsafe.Pointer(&callbackInfo{data: data, async_cb: cb, ptr: res})
-	res.a, res.l, res.Handle = t, loop.GetNativeLoop(), Handle{(*C.uv_handle_t)(unsafe.Pointer(t)), t.data, res}
+	res.Async, res.Loop, res.Handle = t, loop.GetNativeLoop(), Handle{(*C.uv_handle_t)(unsafe.Pointer(t)), t.data, res}
 	if r := uv_async_init(loop.GetNativeLoop(), t); r != 0 {
 		C.free(unsafe.Pointer(t))
 		return nil, ParseUvErr(r)
@@ -39,15 +39,10 @@ func UvAsyncInit(loop *UvLoop, data interface{}, cb func(*Handle)) (*UvAsync, er
 
 // Send (uv_async_send) wake up the event loop and call the async handle’s callback.
 func (a *UvAsync) Send() C.int {
-	return C.uv_async_send(a.a)
-}
-
-// GetAsyncHandle get handle
-func (a *UvAsync) GetAsyncHandle() *C.uv_async_t {
-	return a.a
+	return C.uv_async_send(a.Async)
 }
 
 // Freemem freemem handle
 func (a *UvAsync) Freemem() {
-	C.free(unsafe.Pointer(a.a))
+	C.free(unsafe.Pointer(a.Async))
 }

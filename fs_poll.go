@@ -38,8 +38,8 @@ import "unsafe"
 
 // UvFSPoll handles allow the user to monitor a given path for changes. Unlike uv_fs_event_t, fs poll handles use stat to detect when a file has changed so they can work on file systems where fs event handles can’t.
 type UvFSPoll struct {
-	f *C.uv_fs_poll_t
-	l *C.uv_loop_t
+	FSPoll *C.uv_fs_poll_t
+	Loop   *C.uv_loop_t
 	Handle
 }
 
@@ -53,7 +53,7 @@ func UvFSPollInit(loop *UvLoop, data interface{}) (*UvFSPoll, error) {
 
 	res := &UvFSPoll{}
 	t.data = unsafe.Pointer(&callbackInfo{data: data, ptr: res})
-	res.f, res.l, res.Handle = t, loop.GetNativeLoop(), Handle{(*C.uv_handle_t)(unsafe.Pointer(t)), t.data, res}
+	res.FSPoll, res.Loop, res.Handle = t, loop.GetNativeLoop(), Handle{(*C.uv_handle_t)(unsafe.Pointer(t)), t.data, res}
 	if r := C.uv_fs_poll_init(loop.GetNativeLoop(), t); r != 0 {
 		C.free(unsafe.Pointer(t))
 		return nil, ParseUvErr(r)
@@ -64,18 +64,18 @@ func UvFSPollInit(loop *UvLoop, data interface{}) (*UvFSPoll, error) {
 
 // Start (uv_fs_event_start) check the file at path for changes every interval milliseconds.
 func (f *UvFSPoll) Start(cb func(h *Handle, status C.int, prev *C.uv_stat_t, current *C.uv_stat_t), path string, interval uint) C.int {
-	cbi := (*callbackInfo)(f.f.data)
+	cbi := (*callbackInfo)(f.FSPoll.data)
 	cbi.fs_poll_cb = cb
 
 	_path := C.CString(path)
 	defer C.free(unsafe.Pointer(_path))
 
-	return uv_fs_poll_start(f.f, _path, interval)
+	return uv_fs_poll_start(f.FSPoll, _path, interval)
 }
 
 // Stop (uv_fs_event_stop) stop the handle, the callback will no longer be called.
 func (f *UvFSPoll) Stop() C.int {
-	return C.uv_fs_poll_stop(f.f)
+	return C.uv_fs_poll_stop(f.FSPoll)
 }
 
 // GetPath (uv_fs_poll_getpath) get the path being monitored by the handle.
@@ -83,7 +83,7 @@ func (f *UvFSPoll) Stop() C.int {
 // On success, buffer will contain the path and size its length.
 // If the buffer is not big enough UV_ENOBUFS will be returned and size will be set to the required size, including the null terminator.
 func (f *UvFSPoll) GetPath() (C.int, *C.char, C.size_t) {
-	path := C._uv_fs_poll_getpath(f.f)
+	path := C._uv_fs_poll_getpath(f.FSPoll)
 	defer C.free(unsafe.Pointer(path))
 
 	return path.err, path.c, path.size
@@ -91,5 +91,5 @@ func (f *UvFSPoll) GetPath() (C.int, *C.char, C.size_t) {
 
 // Freemem freemem handle
 func (f *UvFSPoll) Freemem() {
-	C.free(unsafe.Pointer(f.f))
+	C.free(unsafe.Pointer(f.FSPoll))
 }

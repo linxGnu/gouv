@@ -48,7 +48,7 @@ func initServer(t *testing.T, loop *UvLoop, flag *uint, port uint16) (connection
 		client.NoDelay(1)
 		client.KeepAlive(1, 10)
 
-		if r := connection.ServerAccept(client.GetStreamHandle()); r != 0 {
+		if r := connection.ServerAccept(client.Stream); r != 0 {
 			t.Fatal(ParseUvErr(r))
 		}
 
@@ -92,7 +92,7 @@ func testTCP(t *testing.T, loop *UvLoop) {
 
 		// try to close connection first
 		shutDown := NewUvShutdown(nil)
-		if r := server.Shutdown(shutDown.s, func(h *Request, status int) {
+		if r := server.Shutdown(shutDown.Shutdown, func(h *Request, status int) {
 			fmt.Println("Shutting down tcp server", h, status)
 		}); r != 0 {
 			t.Fatal(ParseUvErr(r))
@@ -128,7 +128,7 @@ func testTCP2(t *testing.T, loop *UvLoop) {
 
 		// try to close connection first
 		shutDown := NewUvShutdown(nil)
-		if r := server.Shutdown(shutDown.s, func(h *Request, status int) {
+		if r := server.Shutdown(shutDown.Shutdown, func(h *Request, status int) {
 			fmt.Println("Shutting down tcp server", h, status)
 		}); r != 0 {
 			t.Fatal(ParseUvErr(r))
@@ -209,7 +209,7 @@ func runUvTcpClient(t *testing.T, loop *UvLoop, testServerPort uint16) {
 		time.Sleep(2 * time.Second)
 
 		shutDown := NewUvShutdown(nil)
-		if r := tcp.Shutdown(shutDown.s, func(h *Request, status int) {
+		if r := tcp.Shutdown(shutDown.Shutdown, func(h *Request, status int) {
 			fmt.Println("Shutdown uv_tcp_t client!", h, status)
 		}); r != 0 {
 			t.Fatal(ParseUvErr(r))

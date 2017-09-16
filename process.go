@@ -108,8 +108,8 @@ func (po *UvProcessOptions) Freemem() {
 
 // UvProcess process handles will spawn a new process and allow the user to control it and establish communication channels with it using streams.
 type UvProcess struct {
-	p *C.uv_process_t
-	l *C.uv_loop_t
+	Process *C.uv_process_t
+	Loop    *C.uv_loop_t
 	Handle
 }
 
@@ -184,7 +184,7 @@ func UvSpawnProcess(loop *UvLoop, options *UvProcessOptions, data interface{}) (
 
 	res := &UvProcess{}
 	p.data = unsafe.Pointer(&callbackInfo{exit_cb: options.ExitCb, data: data, ptr: res})
-	res.p, res.l, res.Handle = p, loop.GetNativeLoop(), Handle{(*C.uv_handle_t)(unsafe.Pointer(p)), p.data, res}
+	res.Process, res.Loop, res.Handle = p, loop.GetNativeLoop(), Handle{(*C.uv_handle_t)(unsafe.Pointer(p)), p.data, res}
 	if r := uv_spawn(loop.GetNativeLoop(), p, opt); r != 0 {
 		C.free(unsafe.Pointer(p))
 		return nil, ParseUvErr(r)
@@ -195,22 +195,17 @@ func UvSpawnProcess(loop *UvLoop, options *UvProcessOptions, data interface{}) (
 
 // Kill (uv_process_kill) sends the specified signal to the given process handle. Check the documentation on uv_signal_t — Signal handle for signal support, specially on Windows.
 func (p *UvProcess) Kill(sigNum C.int) C.int {
-	return C.uv_process_kill(p.p, sigNum)
+	return C.uv_process_kill(p.Process, sigNum)
 }
 
 // Unref unrefernce this process
 func (p *UvProcess) Unref() {
-	uv_unref((*C.uv_handle_t)(unsafe.Pointer(p.p)))
-}
-
-// GetProcessHandle get handle
-func (p *UvProcess) GetProcessHandle() *C.uv_process_t {
-	return p.p
+	uv_unref((*C.uv_handle_t)(unsafe.Pointer(p.Process)))
 }
 
 // Freemem process
 func (p *UvProcess) Freemem() {
-	C.free(unsafe.Pointer(p.p))
+	C.free(unsafe.Pointer(p.Process))
 }
 
 // UvKill (uv_kill) sends the specified signal to the given PID. Check the documentation on uv_signal_t — Signal handle for signal support, specially on Windows.

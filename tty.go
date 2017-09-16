@@ -22,8 +22,8 @@ import "unsafe"
 
 // UvTTY handles represent a stream for the console.
 type UvTTY struct {
-	t *C.uv_tty_t
-	l *C.uv_loop_t
+	TTY  *C.uv_tty_t
+	Loop *C.uv_loop_t
 	UvStream
 }
 
@@ -43,7 +43,7 @@ func UvTTYInit(loop *UvLoop, fd C.uv_file, readable int, data interface{}) (*UvT
 
 	res := &UvTTY{}
 	t.data = unsafe.Pointer(&callbackInfo{ptr: res, data: data})
-	res.s, res.l, res.t, res.Handle = (*C.uv_stream_t)(unsafe.Pointer(t)), loop.GetNativeLoop(), t, Handle{(*C.uv_handle_t)(unsafe.Pointer(t)), t.data, res}
+	res.Stream, res.Loop, res.TTY, res.Handle = (*C.uv_stream_t)(unsafe.Pointer(t)), loop.GetNativeLoop(), t, Handle{(*C.uv_handle_t)(unsafe.Pointer(t)), t.data, res}
 	if r := C.uv_tty_init(loop.GetNativeLoop(), t, fd, C.int(readable)); r != 0 {
 		C.free(unsafe.Pointer(t))
 		return nil, ParseUvErr(r)
@@ -54,7 +54,7 @@ func UvTTYInit(loop *UvLoop, fd C.uv_file, readable int, data interface{}) (*UvT
 
 // SetMode (uv_tty_set_mode) set the TTY using the specified terminal mode.
 func (t *UvTTY) SetMode(mode UV_TTY_MODE) C.int {
-	return C.uv_tty_set_mode(t.t, C.uv_tty_mode_t(mode))
+	return C.uv_tty_set_mode(t.TTY, C.uv_tty_mode_t(mode))
 }
 
 // ResetMode (uv_tty_reset_mode) to be called when the program exits. Resets TTY settings to default values for the next process to take over.
@@ -65,7 +65,7 @@ func (t *UvTTY) ResetMode() C.int {
 
 // GetWinsize (uv_tty_get_winsize) gets the current Window size. On success it returns 0.
 func (t *UvTTY) GetWinsize() (err C.int, width C.int, height C.int) {
-	ws := C.get_tty_window_size(t.t)
+	ws := C.get_tty_window_size(t.TTY)
 	defer C.free(unsafe.Pointer(ws))
 
 	return ws.err, ws.width, ws.height
@@ -73,5 +73,5 @@ func (t *UvTTY) GetWinsize() (err C.int, width C.int, height C.int) {
 
 // Freemem freemem of TTY
 func (t *UvTTY) Freemem() {
-	C.free(unsafe.Pointer(t.t))
+	C.free(unsafe.Pointer(t.TTY))
 }

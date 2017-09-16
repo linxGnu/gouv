@@ -45,6 +45,7 @@ extern void __uv_shutdown_cb(uv_shutdown_t *req, int status);
 extern void __uv_exit_cb(uv_process_t *process, int exit_status, int term_signal);
 extern void __uv_fs_event_cb(uv_fs_event_t *handle, char *filename, int events, int status);
 extern void __uv_fs_poll_cb(uv_fs_poll_t *handle, int status, uv_stat_t *prev, uv_stat_t *curr);
+extern void __uv_alloc_cb(uv_handle_t *handle, size_t suggested_size, uv_buf_t *buf);
 
 typedef struct connection_context_s
 {
@@ -99,10 +100,10 @@ static int _uv_udp_send(uv_udp_send_t *req, uv_udp_t *handle, uv_buf_t bufs[], u
     return uv_udp_send(req, handle, bufs, bufcnt, addr, __uv_udp_send_cb);
 }
 
-static int _uv_udp_recv_start(uv_udp_t *udp)
-{
-    return uv_udp_recv_start(udp, _uv_alloc_cb, __uv_udp_recv_cb);
-}
+// static int _uv_udp_recv_start(uv_udp_t *udp)
+// {
+//     return uv_udp_recv_start(udp, _uv_alloc_cb, __uv_udp_recv_cb);
+// }
 
 static int _uv_tcp_connect(uv_connect_t *req, uv_tcp_t *handle, struct sockaddr *address)
 {
@@ -121,7 +122,7 @@ static int _uv_listen(uv_stream_t *stream, int backlog)
 
 static int _uv_read_start(uv_stream_t *stream)
 {
-    return uv_read_start(stream, _uv_alloc_cb, __uv_read_cb);
+    return uv_read_start(stream, __uv_alloc_cb, __uv_read_cb);
 }
 
 static int _uv_write(uv_write_t *req, uv_stream_t *handle, uv_buf_t bufs[], int bufcnt)

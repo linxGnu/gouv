@@ -16,7 +16,6 @@ func testSignal(t *testing.T, loop *UvLoop) {
 			t.Fatal(err)
 		}
 
-		fmt.Println("Signal handle:", signal.GetSignalHandle())
 		signal.Start(func(h *Handle, sigNum int) {
 			fmt.Println("Receive signal:", sigNum)
 		}, 1)
@@ -26,7 +25,6 @@ func testSignal(t *testing.T, loop *UvLoop) {
 			t.Fatal(err)
 		}
 
-		fmt.Println("Signal handle:", signal.GetSignalHandle())
 		signal1.Start(func(h *Handle, sigNum int) {
 			fmt.Println("Receive signal:", sigNum)
 		}, 2)

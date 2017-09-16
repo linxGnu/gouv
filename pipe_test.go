@@ -30,7 +30,7 @@ func testPipe(t *testing.T, loop *UvLoop) {
 		fmt.Println("Pipe server got connection", server, status)
 
 		client, _ := UvPipeInit(loop, 0, nil)
-		if r := server.ServerAccept(client.GetStreamHandle()); r != 0 {
+		if r := server.ServerAccept(client.Stream); r != 0 {
 			t.Fatal(ParseUvErr(r))
 		}
 
@@ -61,7 +61,7 @@ func testPipe(t *testing.T, loop *UvLoop) {
 		time.Sleep(2 * time.Second)
 
 		shutDown := NewUvShutdown(nil)
-		if r := pClient.Shutdown(shutDown.s, func(h *Request, status int) {
+		if r := pClient.Shutdown(shutDown.Shutdown, func(h *Request, status int) {
 			fmt.Println("Shutdown pipe client!", h, status)
 		}); r != 0 {
 			t.Fatal(ParseUvErr(r))

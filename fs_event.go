@@ -40,8 +40,8 @@ import (
 // UvFSEvent (uv_fs_event_t) FS Event handles allow the user to monitor a given path for changes, for example, if the file was renamed or there was a generic change in it.
 // This handle uses the best backend for the job on each platform.
 type UvFSEvent struct {
-	f *C.uv_fs_event_t
-	l *C.uv_loop_t
+	FSEvent *C.uv_fs_event_t
+	Loop    *C.uv_loop_t
 	Handle
 }
 
@@ -55,7 +55,7 @@ func UvFSEventInit(loop *UvLoop, data interface{}) (*UvFSEvent, error) {
 
 	res := &UvFSEvent{}
 	t.data = unsafe.Pointer(&callbackInfo{data: data, ptr: res})
-	res.f, res.l, res.Handle = t, loop.GetNativeLoop(), Handle{(*C.uv_handle_t)(unsafe.Pointer(t)), t.data, res}
+	res.FSEvent, res.Loop, res.Handle = t, loop.GetNativeLoop(), Handle{(*C.uv_handle_t)(unsafe.Pointer(t)), t.data, res}
 	if r := C.uv_fs_event_init(loop.GetNativeLoop(), t); r != 0 {
 		C.free(unsafe.Pointer(t))
 		return nil, ParseUvErr(r)
@@ -66,18 +66,18 @@ func UvFSEventInit(loop *UvLoop, data interface{}) (*UvFSEvent, error) {
 
 // Start (uv_fs_event_start) start the handle with the given callback, which will watch the specified path for changes. flags can be an ORed mask of uv_fs_event_flags.
 func (f *UvFSEvent) Start(cb func(*Handle, *C.char, int, int), path string, flags uint) C.int {
-	cbi := (*callbackInfo)(f.f.data)
+	cbi := (*callbackInfo)(f.FSEvent.data)
 	cbi.fs_event_cb = cb
 
 	_path := C.CString(path)
 	defer C.free(unsafe.Pointer(_path))
 
-	return uv_fs_event_start(f.f, _path, flags)
+	return uv_fs_event_start(f.FSEvent, _path, flags)
 }
 
 // Stop (uv_fs_event_stop) stop the handle, the callback will no longer be called.
 func (f *UvFSEvent) Stop() C.int {
-	return C.uv_fs_event_stop(f.f)
+	return C.uv_fs_event_stop(f.FSEvent)
 }
 
 // GetPath (uv_fs_event_getpath) get the path being monitored by the handle.
@@ -85,7 +85,7 @@ func (f *UvFSEvent) Stop() C.int {
 // On success, buffer will contain the path and size its length.
 // If the buffer is not big enough UV_ENOBUFS will be returned and size will be set to the required size, including the null terminator.
 func (f *UvFSEvent) GetPath() (C.int, *C.char, C.size_t) {
-	path := C._uv_fs_event_getpath(f.f)
+	path := C._uv_fs_event_getpath(f.FSEvent)
 	defer C.free(unsafe.Pointer(path))
 
 	return path.err, path.c, path.size
@@ -93,5 +93,5 @@ func (f *UvFSEvent) GetPath() (C.int, *C.char, C.size_t) {
 
 // Freemem freemem handle
 func (f *UvFSEvent) Freemem() {
-	C.free(unsafe.Pointer(f.f))
+	C.free(unsafe.Pointer(f.FSEvent))
 }

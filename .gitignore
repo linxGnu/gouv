@@ -17,4 +17,4 @@ gouv
 vendor
 uv.h
 coverage.out
-tmp.tmp
+*.tmp

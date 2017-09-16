@@ -13,8 +13,8 @@ import "unsafe"
 
 // UvIdle idle handles will run the given callback once per loop iteration, right before the uv_prepare_t handles.
 type UvIdle struct {
-	i *C.uv_idle_t
-	l *C.uv_loop_t
+	Idle *C.uv_idle_t
+	Loop *C.uv_loop_t
 	Handle
 }
 
@@ -28,7 +28,7 @@ func UvIdleInit(loop *UvLoop, data interface{}) (*UvIdle, error) {
 
 	res := &UvIdle{}
 	t.data = unsafe.Pointer(&callbackInfo{data: data, ptr: res})
-	res.i, res.l, res.Handle = t, loop.GetNativeLoop(), Handle{(*C.uv_handle_t)(unsafe.Pointer(t)), t.data, res}
+	res.Idle, res.Loop, res.Handle = t, loop.GetNativeLoop(), Handle{(*C.uv_handle_t)(unsafe.Pointer(t)), t.data, res}
 	if r := C.uv_idle_init(loop.GetNativeLoop(), t); r != 0 {
 		C.free(unsafe.Pointer(t))
 		return nil, ParseUvErr(r)
@@ -39,23 +39,18 @@ func UvIdleInit(loop *UvLoop, data interface{}) (*UvIdle, error) {
 
 // Start (uv_prepare_start) start the timer. timeout and repeat are in milliseconds.
 func (idle *UvIdle) Start(cb func(*Handle, int)) C.int {
-	cbi := (*callbackInfo)(idle.i.data)
+	cbi := (*callbackInfo)(idle.Idle.data)
 	cbi.idle_cb = cb
 
-	return uv_idle_start(idle.i)
+	return uv_idle_start(idle.Idle)
 }
 
 // Stop (uv_idle_stop) the timer, the callback will not be called anymore.
 func (idle *UvIdle) Stop() C.int {
-	return C.uv_idle_stop(idle.i)
+	return C.uv_idle_stop(idle.Idle)
 }
 
 // Freemem freemem handle
 func (idle *UvIdle) Freemem() {
-	C.free(unsafe.Pointer(idle.i))
-}
-
-// GetIdleHandle get handle
-func (idle *UvIdle) GetIdleHandle() *C.uv_idle_t {
-	return idle.i
+	C.free(unsafe.Pointer(idle.Idle))
 }

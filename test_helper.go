@@ -32,13 +32,13 @@ import (
 func sampleTCPReadHandling(h *Handle, buf *C.uv_buf_t, nRead C.ssize_t) {
 	conn := h.Ptr.(*UvTCP)
 
-	st := C.testRead(conn.s, nRead, buf)
+	st := C.testRead(conn.Stream, nRead, buf)
 	fmt.Println("Read from client: ", C.GoString(st))
 
 	bufs := MallocUvBuf(1)
 	SetBuf(bufs, 0, BufInit2(st, C.uint(C.strlen(st)+1)))
 
-	conn.Write(NewUvWrite(nil).w, bufs, 1, func(h *Request, status int) {
+	conn.Write(NewUvWrite(nil).Write, bufs, 1, func(h *Request, status int) {
 		fmt.Println("Write done: ", h.Handle.Ptr.(*UvTCP), status)
 	})
 }
@@ -51,13 +51,13 @@ func sampleTCPReadOfClient(conn *UvTCP) {
 	SetBuf(bufs, 0, BufInit2(st, C.uint(C.strlen(st)+1)))
 
 	writeRequest := NewUvWrite(nil)
-	conn.Write(writeRequest.w, bufs, 1, func(h *Request, status int) {
+	conn.Write(writeRequest.Write, bufs, 1, func(h *Request, status int) {
 		fmt.Println("Write done: ", h.Handle.Ptr.(*UvTCP), status)
 		writeRequest.Freemem()
 	})
 
 	conn.ReadStart(func(h *Handle, buf *C.uv_buf_t, nRead C.ssize_t) {
-		st := C.testRead(conn.s, nRead, buf)
+		st := C.testRead(conn.Stream, nRead, buf)
 		fmt.Println("Read from server ______ :", C.GoString(st))
 	})
 }
@@ -65,13 +65,13 @@ func sampleTCPReadOfClient(conn *UvTCP) {
 func samplePipeReadHandling(h *Handle, buf *C.uv_buf_t, nRead C.ssize_t) {
 	conn := h.Ptr.(*UvPipe)
 
-	st := C.testRead(conn.s, nRead, buf)
+	st := C.testRead(conn.Stream, nRead, buf)
 	fmt.Println("Read from client: ", C.GoString(st))
 
 	bufs := MallocUvBuf(1)
 	SetBuf(bufs, 0, BufInit2(st, C.uint(C.strlen(st)+1)))
 
-	conn.Write(NewUvWrite(nil).w, bufs, 1, func(h *Request, status int) {
+	conn.Write(NewUvWrite(nil).Write, bufs, 1, func(h *Request, status int) {
 		fmt.Println("Write done: ", h.Handle.Ptr.(*UvPipe), status)
 	})
 }
@@ -83,12 +83,12 @@ func samplePipeReadOfClient(conn *UvPipe) {
 	bufs := MallocUvBuf(1)
 	SetBuf(bufs, 0, BufInit2(st, C.uint(C.strlen(st)+1)))
 
-	conn.Write(NewUvWrite(nil).w, bufs, 1, func(h *Request, status int) {
+	conn.Write(NewUvWrite(nil).Write, bufs, 1, func(h *Request, status int) {
 		fmt.Println("Write pipe done: ", h.Handle.Ptr.(*UvPipe), status)
 	})
 
 	conn.ReadStart(func(h *Handle, buf *C.uv_buf_t, nRead C.ssize_t) {
-		st := C.testRead(conn.s, nRead, buf)
+		st := C.testRead(conn.Stream, nRead, buf)
 		fmt.Println("Read from pipe server ______ :", C.GoString(st))
 	})
 }
